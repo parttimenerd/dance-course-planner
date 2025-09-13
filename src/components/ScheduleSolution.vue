@@ -208,14 +208,18 @@ export default {
       props.schedule.courses.forEach(course => {
         // Ensure we're working with Date objects
         const startTime = new Date(course.startTime)
-        timeSlots.add(startTime.getTime())
+        // Create a unique key based on hours and minutes only (ignore date)
+        const timeKey = `${startTime.getHours()}:${startTime.getMinutes()}`
+        timeSlots.add(timeKey)
       })
       return Array.from(timeSlots)
-        .map(time => new Date(time))
+        .map(timeKey => {
+          const [hours, minutes] = timeKey.split(':').map(Number)
+          // Create a consistent date for all time slots (just for display)
+          const date = new Date(2023, 0, 1, hours, minutes)
+          return date
+        })
         .sort((a, b) => a.getHours() - b.getHours() || a.getMinutes() - b.getMinutes())
-        .filter((time, index, self) => 
-          index === 0 || time.getHours() !== self[index - 1].getHours() || time.getMinutes() !== self[index - 1].getMinutes()
-        ) // Remove duplicates
     })
 
     const getCoursesForDay = (displayDayCode) => {
@@ -262,7 +266,10 @@ export default {
     const getCourseForDayAndTime = (displayDayCode, timeSlot) => {
       const coursesForDay = getCoursesForDay(displayDayCode)
       return coursesForDay.find(course => {
-        return course.startTime.getTime() === timeSlot.getTime()
+        const courseStartTime = new Date(course.startTime)
+        // Match based on hours and minutes only, not full timestamp
+        return courseStartTime.getHours() === timeSlot.getHours() && 
+               courseStartTime.getMinutes() === timeSlot.getMinutes()
       })
     }
 
