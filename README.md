@@ -47,9 +47,38 @@ npm run build
 ```
 The built files will be in the `dist` directory.
 
+## Deployment
+
+### For Subdirectory Deployment
+
+If you're deploying to a subdirectory (like `/dance-planner/`), the Vite configuration is already set up with `base: '/dance-planner/'`.
+
+After building:
+
+1. Upload the contents of the `dist` folder to your server's `/dance-planner/` directory
+2. Ensure your web server is configured to serve static files from this directory
+3. Make sure the `schedule.json` file is accessible at `https://yourdomain.com/dance-planner/schedule.json`
+
+### For Root Domain Deployment
+
+If deploying to the root domain, change the `base` setting in `vite.config.js`:
+
+```javascript
+base: '/', // instead of '/dance-planner/'
+```
+
+Then rebuild the project.
+
+### Common Issues
+
+- **MIME Type Errors**: Usually caused by incorrect `base` configuration in `vite.config.js`
+- **404 Errors**: Make sure all files from `dist` are uploaded and the server can serve static files
+- **Missing schedule.json**: The app requires `schedule.json` to be manually placed in the deployment directory
+
 ## Contributing
 
 Contributions are welcome! Please open an issue or submit a pull request.
 
 ## License
+
 MIT License
