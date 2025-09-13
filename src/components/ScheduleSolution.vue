@@ -382,6 +382,38 @@ export default {
     }
 
     const generatePrintHTML = () => {
+      // Generate weekly overview table
+      const weeklyOverviewHTML = `
+        <h2>Weekly Overview</h2>
+        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid #ddd; padding: 8px; background: #f5f5f5;">Time</th>
+              ${weekDays.value.map(day => `
+                <th style="border: 1px solid #ddd; padding: 8px; background: #f5f5f5;">${day}</th>
+              `).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${allTimeSlots.value.map(timeSlot => `
+              <tr>
+                <td style="border: 1px solid #ddd; padding: 8px; font-family: monospace; background: #fafafa;">
+                  ${formatTime(timeSlot)}
+                </td>
+                ${weekDays.value.map(day => {
+                  const course = getCourseForDayAndTime(day, timeSlot)
+                  return `
+                    <td style="border: 1px solid #ddd; padding: 4px; text-align: center; ${!course ? 'background: #f9f9f9; opacity: 0.5;' : ''}">
+                      ${course ? `<strong>${course.name}</strong>` : ''}
+                    </td>
+                  `
+                }).join('')}
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `
+
       return `
         <!DOCTYPE html>
         <html>
@@ -389,15 +421,28 @@ export default {
           <title>Dance Schedule ${props.index + 1}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 20px; }
-            h1 { color: #333; }
+            h1, h2 { color: #333; }
+            h2 { margin-top: 30px; margin-bottom: 15px; }
             .course { margin: 10px 0; padding: 10px; border-left: 4px solid #4F46E5; }
             .time { font-weight: bold; }
             .details { color: #666; font-size: 0.9em; }
+            table { page-break-inside: auto; }
+            tr { page-break-inside: avoid; page-break-after: auto; }
+            @media print {
+              body { margin: 10px; }
+              h1 { font-size: 18px; }
+              h2 { font-size: 16px; }
+              table { font-size: 12px; }
+            }
           </style>
         </head>
         <body>
           <h1>Dance Schedule ${props.index + 1}</h1>
-          <p>Total: ${props.schedule.totalCourses} courses • ${totalHours.value} hours • ${daysWithCourses.value.length} days</p>
+          <p>Total: ${props.schedule.courses.length} courses • ${totalHours.value} hours • ${daysWithCourses.value.length} days</p>
+          
+          ${weeklyOverviewHTML}
+          
+          <h2>Course Details</h2>
           ${props.schedule.courses.map(course => `
             <div class="course">
               <div class="time">${translateDayCode(course.day)} ${formatTime(course.startTime)} - ${formatTime(course.endTime)}</div>
