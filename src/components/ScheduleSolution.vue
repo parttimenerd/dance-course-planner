@@ -214,7 +214,7 @@ export default {
         .map(time => new Date(time))
         .sort((a, b) => a.getHours() - b.getHours() || a.getMinutes() - b.getMinutes())
         .filter((time, index, self) => 
-          index === 0 || time.getTime() !== self[index - 1].getTime()
+          index === 0 || time.getHours() !== self[index - 1].getHours() || time.getMinutes() !== self[index - 1].getMinutes()
         ) // Remove duplicates
     })
 
