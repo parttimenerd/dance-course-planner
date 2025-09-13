@@ -1,12 +1,12 @@
 <template>
   <div class="mb-6">
-    <h3 class="text-sm font-medium text-gray-700 mb-3">📅 Day Constraints</h3>
+    <h3 class="text-sm font-medium text-gray-700 mb-3">📅 {{ t('Day Constraints') }}</h3>
 
     <!-- Day Settings -->
     <div class="space-y-4">
       <div>
         <label class="block text-xs text-gray-600 mb-1">
-          Maximum courses per day
+          {{ t('Maximum courses per day') }}
         </label>
         <div class="flex gap-1">
           <button
@@ -30,6 +30,7 @@
 
 <script>
 import { ref, watch } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
 
 export default {
   name: 'DayConstraints',
@@ -41,15 +42,9 @@ export default {
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
-    const weekDays = [
-      { short: 'MO', long: 'Monday' },
-      { short: 'DI', long: 'Tuesday' },
-      { short: 'MI', long: 'Wednesday' },
-      { short: 'DO', long: 'Thursday' },
-      { short: 'FR', long: 'Friday' },
-      { short: 'SA', long: 'Saturday' },
-      { short: 'SO', long: 'Sunday' }
-    ]
+    const { t, dayNames } = useI18n()
+    
+    const weekDays = dayNames
 
     const localConstraints = ref({
       blockedDays: [...(props.modelValue.blockedDays || [])],
@@ -80,6 +75,7 @@ export default {
     }, { deep: true })
 
     return {
+      t,
       localConstraints,
       updateConstraints,
       updateMaxCoursesPerDay

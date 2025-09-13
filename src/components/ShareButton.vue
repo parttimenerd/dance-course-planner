@@ -9,13 +9,14 @@
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
     </svg>
     <div v-else class="w-3 h-3 mr-1 animate-spin rounded-full border border-gray-400 border-t-transparent"></div>
-    {{ sharing ? 'Sharing...' : shareText }}
+    {{ sharing ? t('Sharing...') : shareText }}
   </button>
 </template>
 
 <script>
 import { ref, computed } from 'vue'
 import { useUrlState } from '../composables/useUrlState.js'
+import { useI18n } from '../composables/useI18n.js'
 
 export default {
   name: 'ShareButton',
@@ -38,9 +39,10 @@ export default {
   setup(props, { emit }) {
     const sharing = ref(false)
     const { generateShareUrl } = useUrlState()
+    const { t } = useI18n()
 
     const shareText = computed(() => {
-      return props.type === 'config' ? 'Share' : 'Share Schedule'
+      return props.type === 'config' ? t('Share') : t('Share Schedule')
     })
 
     const buttonClass = computed(() => {
@@ -60,8 +62,8 @@ export default {
         // Try native Web Share API first
         if (navigator.share) {
           await navigator.share({
-            title: `Dance Course Planner - ${props.type === 'config' ? 'Configuration' : 'Schedule'}`,
-            text: `Check out this dance course ${props.type}!`,
+            title: `${t('Dance Course Planner')} - ${props.type === 'config' ? t('Configuration') : t('Schedule')}`,
+            text: `${t('Check out this dance course')} ${props.type}!`,
             url: shareUrl
           })
         } else {
@@ -69,7 +71,7 @@ export default {
           await navigator.clipboard.writeText(shareUrl)
           
           // Show toast notification
-          showNotification('Link copied to clipboard!')
+          showNotification(t('Link copied to clipboard!'))
         }
 
         emit('share', {
@@ -80,7 +82,7 @@ export default {
 
       } catch (error) {
         console.error('Share failed:', error)
-        showNotification('Failed to share. Please try again.', 'error')
+        showNotification(t('Failed to share. Please try again.'), 'error')
       } finally {
         sharing.value = false
       }

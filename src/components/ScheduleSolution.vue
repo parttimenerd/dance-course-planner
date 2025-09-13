@@ -7,12 +7,9 @@
     <div class="bg-gray-50 px-4 py-3 border-b">
       <div class="flex items-center justify-between">
         <h3 class="text-sm font-medium text-gray-900">
-          Schedule {{ index + 1 }}
+          {{ t('Schedule') }} {{ index + 1 }}
         </h3>
         <div class="flex items-center space-x-4">
-          <div class="flex items-center space-x-4 text-xs text-gray-600">
-            <span>{{ schedule.totalCourses }} courses</span>
-          </div>
           <ShareButton 
             type="schedule" 
             :config="config"
@@ -25,27 +22,39 @@
 
     <div class="p-4">
       <!-- Weekly Schedule Grid -->
-      <div class="mb-4">
-        <h4 class="text-xs font-medium text-gray-700 mb-2">Weekly Overview</h4>
-        <div class="grid grid-cols-7 gap-1 text-xs">
+      <div class="mb-4 hidden md:block">
+        <h4 class="text-xs font-medium text-gray-700 mb-2">{{ t('Weekly Overview') }}</h4>
+        <div class="border border-gray-200 rounded-lg overflow-hidden">
           <!-- Day headers -->
-          <div v-for="day in weekDays" :key="day" class="text-center font-medium text-gray-600 py-1">
-            {{ day }}
+          <div class="grid grid-cols-8 gap-0">
+            <div class="bg-gray-100 text-gray-700 text-xs font-medium py-2 px-2 border-b border-r border-gray-200">
+              {{ t('Time') }}
+            </div>
+            <div v-for="day in weekDays" :key="day" 
+                 :class="[
+                   'text-center font-medium py-2 px-2 border-b border-r border-gray-200 last:border-r-0',
+                   dayHasCourses(day) ? [getDayColors(day).bg, getDayColors(day).text] : ['bg-gray-100', 'text-gray-400', 'opacity-50']
+                 ]">
+              {{ day }}
+            </div>
           </div>
-          <!-- Course slots -->
-          <div v-for="day in weekDays" :key="'courses-' + day" class="border border-gray-200 rounded min-h-[90px] p-1">
-            <template v-for="(course, index) in getCoursesForDay(day)" :key="course.id">
-              <!-- Gap indicator before course (except first) -->
-              <div v-if="index > 0 && hasSignificantGap(getCoursesForDay(day), index)" 
-                   class="text-center text-xs text-gray-400 py-1 border-t border-dashed border-gray-300 my-1">
-                {{ formatGap(getCoursesForDay(day)[index - 1], course) }}
-              </div>
-              <!-- Course card -->
-              <div class="bg-primary-100 text-primary-800 rounded px-1 py-1 mb-1 text-xs leading-tight h-20 flex flex-col justify-center">
-                <div class="font-medium text-center break-words">{{ course.name }}</div>
-                <div class="text-xs opacity-75 text-center">{{ formatTime(course.startTime) }}</div>
-              </div>
-            </template>
+          <!-- Time slot rows -->
+          <div v-for="timeSlot in allTimeSlots" :key="timeSlot" class="grid grid-cols-8 gap-0">
+            <!-- Time label -->
+            <div class="bg-gray-50 text-gray-600 text-xs py-2 px-2 border-b border-r border-gray-200 font-mono">
+              {{ formatTime(timeSlot) }}
+            </div>
+            <!-- Course cells for each day -->
+            <div v-for="day in weekDays" :key="`${timeSlot}-${day}`" 
+                 :class="getTimeSlotCellClasses(day, timeSlot)">
+              <template v-if="getCourseForDayAndTime(day, timeSlot)">
+                <div class="bg-primary-100 text-primary-800 rounded m-1 px-1 py-1 text-xs leading-tight">
+                  <div class="font-medium text-center break-words">
+                    {{ getCourseForDayAndTime(day, timeSlot).name }}
+                  </div>
+                </div>
+              </template>
+            </div>
           </div>
         </div>
       </div>
@@ -59,8 +68,8 @@
         >
           <div class="flex-1">
             <div class="flex items-center space-x-3">
-              <span class="inline-flex items-center justify-center w-8 h-8 bg-primary-600 text-white text-xs font-bold rounded-full">
-                {{ course.day }}
+              <span :class="getDayBadgeClasses(course.day)">
+                {{ translateDayCode(course.day) }}
               </span>
               <div>
                 <p class="text-sm font-medium text-gray-900">
@@ -86,7 +95,7 @@
       <!-- Gap Warning (only if gaps exist) -->
       <div v-if="hasGaps" class="mt-2 pt-2 border-t border-gray-200">
         <div class="flex items-center justify-center text-xs text-orange-600">
-          <span>⚠️ {{ averageGap }}h average gap between courses</span>
+          <span>⚠️ {{ averageGap }}h {{ t('average gap between courses') }}</span>
         </div>
       </div>
 
@@ -97,13 +106,13 @@
             @click="exportToCalendar"
             class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
           >
-            📅 Export to Calendar
+            📅 {{ t('Export to Calendar') }}
           </button>
           <button
             @click="printSchedule"
             class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
           >
-            🖨️ Print
+            🖨️ {{ t('Print') }}
           </button>
         </div>
       </div>
@@ -113,6 +122,7 @@
 
 <script>
 import { computed } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
 import ShareButton from './ShareButton.vue'
 
 export default {
@@ -140,6 +150,8 @@ export default {
   },
   emits: ['share', 'toggle-highlight'],
   setup(props, { emit }) {
+    const { t, dayNames, formatTime, translateDayCode, getDayColors } = useI18n()
+    
     const daysWithCourses = computed(() => {
       const days = new Set(props.schedule.courses.map(course => course.day))
       return Array.from(days).sort()
@@ -188,12 +200,88 @@ export default {
       return parseFloat(averageGap.value) > 0.2 // Only show warning for gaps > 0.2h (12 minutes)
     })
 
-    const weekDays = ['MO', 'DI', 'MI', 'DO', 'FR', 'SA', 'SO']
+    const weekDays = computed(() => dayNames.value.map(day => day.short))
 
-    const getCoursesForDay = (day) => {
+    // Get all unique time slots across all courses for the grid
+    const allTimeSlots = computed(() => {
+      const timeSlots = new Set()
+      props.schedule.courses.forEach(course => {
+        // Ensure we're working with Date objects
+        const startTime = new Date(course.startTime)
+        timeSlots.add(startTime.getTime())
+      })
+      return Array.from(timeSlots)
+        .map(time => new Date(time))
+        .sort((a, b) => a.getHours() - b.getHours() || a.getMinutes() - b.getMinutes())
+    })
+
+    const getCoursesForDay = (displayDayCode) => {
+      // Convert display day code back to data day code for filtering
+      // For German, displayDayCode is the same as data day code
+      // For English, we need to map back: MON->MO, TUE->DI, etc.
+      let dataDayCode = displayDayCode
+      if (displayDayCode === 'MON') dataDayCode = 'MO'
+      else if (displayDayCode === 'TUE') dataDayCode = 'DI'
+      else if (displayDayCode === 'WED') dataDayCode = 'MI'
+      else if (displayDayCode === 'THU') dataDayCode = 'DO'
+      else if (displayDayCode === 'FRI') dataDayCode = 'FR'
+      else if (displayDayCode === 'SAT') dataDayCode = 'SA'
+      else if (displayDayCode === 'SUN') dataDayCode = 'SO'
+      
       return props.schedule.courses
-        .filter(course => course.day === day)
+        .filter(course => course.day === dataDayCode)
         .sort((a, b) => a.startTime - b.startTime)
+    }
+
+    const dayHasCourses = (displayDayCode) => {
+      return getCoursesForDay(displayDayCode).length > 0
+    }
+
+    const getDayBadgeClasses = (dayCode) => {
+      const dayName = translateDayCode(dayCode)
+      const colors = getDayColors(dayName)
+      return `inline-flex items-center justify-center w-8 h-8 ${colors.bg} ${colors.text} text-xs font-bold rounded-full`
+    }
+
+    const getLocalDayColumnClasses = (day, coursesForDay) => {
+      // Create column classes with day-specific colors and muted empty styling
+      const colors = getDayColors(day)
+      const hasContent = coursesForDay && coursesForDay.length > 0
+      
+      return [
+        'border rounded-b min-h-[90px] p-1 border-t-0',
+        colors.border,
+        hasContent ? 'bg-white' : 'bg-gray-50 opacity-60'
+      ].join(' ')
+    }
+
+    // Get course for a specific day and time slot
+    const getCourseForDayAndTime = (displayDayCode, timeSlot) => {
+      const coursesForDay = getCoursesForDay(displayDayCode)
+      return coursesForDay.find(course => {
+        return course.startTime.getTime() === timeSlot.getTime()
+      })
+    }
+
+    // Get CSS classes for time slot cells
+    const getTimeSlotCellClasses = (day, timeSlot) => {
+      const colors = getDayColors(day)
+      const hasCourse = getCourseForDayAndTime(day, timeSlot) !== undefined
+      const dayHasAnyCourses = dayHasCourses(day)
+      
+      if (!dayHasAnyCourses) {
+        // Entire day has no courses - make it really muted
+        return [
+          'min-h-[40px] py-1 px-1 border-b border-r border-gray-200 last:border-r-0',
+          'bg-gray-100 text-gray-300 opacity-30 border-gray-300'
+        ].join(' ')
+      }
+      
+      return [
+        'min-h-[40px] py-1 px-1 border-b border-r border-gray-200 last:border-r-0',
+        colors.border,
+        hasCourse ? 'bg-white' : 'bg-gray-50 opacity-60'
+      ].join(' ')
     }
 
     const hasSignificantGap = (courses, index) => {
@@ -213,14 +301,6 @@ export default {
         return minutes > 0 ? `${hours}h ${minutes}m gap` : `${hours}h gap`
       }
       return `${minutes}m gap`
-    }
-
-    const formatTime = (date) => {
-      return date.toLocaleTimeString('en-US', { 
-        hour: '2-digit', 
-        minute: '2-digit',
-        hour12: false 
-      })
     }
 
     const handleShare = (shareData) => {
@@ -310,7 +390,7 @@ export default {
           <p>Total: ${props.schedule.totalCourses} courses • ${totalHours.value} hours • ${daysWithCourses.value.length} days</p>
           ${props.schedule.courses.map(course => `
             <div class="course">
-              <div class="time">${course.day} ${formatTime(course.startTime)} - ${formatTime(course.endTime)}</div>
+              <div class="time">${translateDayCode(course.day)} ${formatTime(course.startTime)} - ${formatTime(course.endTime)}</div>
               <div><strong>${course.name}</strong> ${course.level ? '(' + course.level + ')' : ''}</div>
               <div class="details">${course.type} • ${course.location} ${course.room ? '- ' + course.room : ''}</div>
               ${course.teacher ? `<div class="details">Teacher: ${course.teacher}</div>` : ''}
@@ -322,15 +402,24 @@ export default {
     }
 
     return {
+      t,
       daysWithCourses,
       totalHours,
       averageGap,
       hasGaps,
       weekDays,
+      allTimeSlots,
       getCoursesForDay,
+      dayHasCourses,
+      getDayBadgeClasses,
+      getLocalDayColumnClasses,
+      getCourseForDayAndTime,
+      getTimeSlotCellClasses,
+      getDayColors,
       hasSignificantGap,
       formatGap,
       formatTime,
+      translateDayCode,
       handleShare,
       handleScheduleClick,
       exportToCalendar,

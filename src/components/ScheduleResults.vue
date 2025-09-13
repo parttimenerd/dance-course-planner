@@ -3,9 +3,9 @@
     <!-- No Results State -->
     <div v-if="!hasResults" class="bg-white rounded-lg shadow-sm border p-8 text-center">
       <div class="text-6xl mb-4">💃🕺</div>
-      <h3 class="text-lg font-medium text-gray-900 mb-2">Ready to Plan Your Dance Schedule?</h3>
+      <h3 class="text-lg font-medium text-gray-900 mb-2">{{ t('Ready to Plan Your Dance Schedule?') }}</h3>
       <p class="text-gray-600">
-        Select your preferred courses and set your constraints to find the perfect combination!
+        {{ t('Select your preferred courses and set your constraints to find the perfect combination!') }}
       </p>
     </div>
 
@@ -15,7 +15,7 @@
       <div class="flex items-center justify-between mb-6">
         <div class="relative">
           <h2 class="text-xl font-semibold text-gray-900">
-            📋 Generated Schedules
+            📋 {{ t('Generated Schedules') }}
           </h2>
           <!-- Dancing Loading Indicator -->
           <div v-if="generating" class="absolute -right-10 top-0 flex items-center">
@@ -23,8 +23,8 @@
           </div>
         </div>
         <div class="text-sm text-gray-600">
-          <span v-if="generating" class="animate-pulse">Computing schedules...</span>
-          <span v-else>Found {{ schedules.length }} possible schedule{{ schedules.length !== 1 ? 's' : '' }}</span>
+          <span v-if="generating" class="animate-pulse">{{ t('Computing schedules...') }}</span>
+          <span v-else>{{ getScheduleCountText(schedules.length) }}</span>
         </div>
       </div>
 
@@ -34,9 +34,9 @@
           <div class="flex">
             <div class="text-yellow-400">⚠️</div>
             <div class="ml-3">
-              <h3 class="text-sm font-medium text-yellow-800">No Valid Schedules Found</h3>
+              <h3 class="text-sm font-medium text-yellow-800">{{ t('No Valid Schedules Found') }}</h3>
               <p class="mt-1 text-sm text-yellow-700">
-                Your current constraints are too restrictive. Try one of the suggestions below:
+                {{ t('Your current constraints are too restrictive. Try one of the suggestions below:') }}
               </p>
             </div>
           </div>
@@ -47,7 +47,7 @@
           <div class="flex items-start">
             <div class="text-blue-400">💡</div>
             <div class="ml-3 flex-1">
-              <h3 class="text-sm font-medium text-blue-800 mb-3">Suggested Changes</h3>
+              <h3 class="text-sm font-medium text-blue-800 mb-3">{{ t('Suggested Changes') }}</h3>
               <div class="space-y-2">
                 <button
                   v-for="suggestion in suggestions"
@@ -85,6 +85,7 @@
 
 <script>
 import ScheduleSolution from './ScheduleSolution.vue'
+import { useI18n } from '../composables/useI18n.js'
 
 export default {
   name: 'ScheduleResults',
@@ -118,17 +119,41 @@ export default {
     }
   },
   emits: ['schedule-share', 'apply-suggestion', 'toggle-highlight'],
+  setup() {
+    const { t, language } = useI18n()
+
+    const getScheduleCountText = (count) => {
+      if (language.value === 'de') {
+        if (count === 1) {
+          return 'Ein möglicher Stundenplan gefunden'
+        } else {
+          return `${count} mögliche Stundenpläne gefunden`
+        }
+      } else {
+        if (count === 1) {
+          return 'Found 1 possible schedule'
+        } else {
+          return `Found ${count} possible schedules`
+        }
+      }
+    }
+
+    return {
+      t,
+      getScheduleCountText
+    }
+  },
   methods: {
     getSuggestionTypeLabel(type) {
       const labels = {
-        increaseGap: 'Allow more time between courses',
-        addTimeSlot: 'Add more available times',
-        addPerDayTimeSlot: 'Add specific time slot',
-        addAllDayTimeSlots: 'Add all time slots for day',
-        enableDayTimeSlots: 'Enable time slots for day',
-        removeCourse: 'Reduce course selection'
+        increaseGap: this.t('Allow more time between courses'),
+        addTimeSlot: this.t('Add more available times'),
+        addPerDayTimeSlot: this.t('Add specific time slot'),
+        addAllDayTimeSlots: this.t('Add all time slots for day'),
+        enableDayTimeSlots: this.t('Enable time slots for day'),
+        removeCourse: this.t('Reduce course selection')
       }
-      return labels[type] || 'Adjust constraints'
+      return labels[type] || this.t('Adjust constraints')
     }
   }
 }

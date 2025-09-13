@@ -1,13 +1,13 @@
 <template>
   <div class="mb-6">
-    <h3 class="text-sm font-medium text-gray-700 mb-3">⏰ Time Constraints</h3>
+    <h3 class="text-sm font-medium text-gray-700 mb-3">⏰ {{ t('Time Constraints') }}</h3>
     
 
 
     <!-- Gap Settings -->
     <div class="mb-6">
       <label class="block text-xs text-gray-600 mb-1">
-        Maximum empty slots between courses
+        {{ t('Maximum empty slots between courses') }}
       </label>
       <div class="flex gap-1">
         <button
@@ -21,7 +21,7 @@
               : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
           ]"
         >
-          {{ slots }} slot{{ slots !== 1 ? 's' : '' }}
+          {{ slots }} {{ slots === 1 ? t('slot') : t('slots') }}
         </button>
       </div>
     </div>
@@ -31,19 +31,19 @@
       <div class="space-y-3 border border-gray-200 rounded-lg p-3 bg-gray-50">
         <div v-for="day in availableDays" :key="day.short" class="space-y-2">
           <div class="flex items-center justify-between">
-            <span class="text-xs font-medium text-gray-700">{{ day.long }} ({{ day.short }})</span>
+            <span class="text-xs font-medium text-gray-700">{{ day.long }}</span>
             <div class="flex gap-1">
               <button
                 @click="selectAllSlotsForDay(day.short)"
                 class="px-2 py-0.5 text-xs bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
               >
-                All
+                {{ t('All') }}
               </button>
               <button
                 @click="clearAllSlotsForDay(day.short)"
                 class="px-2 py-0.5 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
               >
-                None
+                {{ t('None') }}
               </button>
             </div>
           </div>
@@ -71,6 +71,7 @@
 
 <script>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
 
 export default {
   name: 'TimeConstraints',
@@ -86,6 +87,8 @@ export default {
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
+    const { t, dayNames, translateDayCode, getDayColors } = useI18n()
+    
     // Define time slots (8 AM to 10 PM)
     const timeSlots = ref([
       { value: 8, label: '8:00' },
@@ -116,25 +119,26 @@ export default {
       
       const daysWithCourses = new Set()
       props.availableCourses.forEach(course => {
-        daysWithCourses.add(course.day)
+        // Translate data day code to display day code
+        daysWithCourses.add(translateDayCode(course.day))
       })
       
-      const weekDays = [
-        { short: 'MO', long: 'Monday' },
-        { short: 'DI', long: 'Tuesday' },
-        { short: 'MI', long: 'Wednesday' },
-        { short: 'DO', long: 'Thursday' },
-        { short: 'FR', long: 'Friday' },
-        { short: 'SA', long: 'Saturday' },
-        { short: 'SO', long: 'Sunday' }
-      ]
-      
-      return weekDays.filter(day => daysWithCourses.has(day.short))
+      return dayNames.value.filter(day => daysWithCourses.has(day.short))
     })
 
     const getAvailableSlotsForDay = (dayShort) => {
       // Get unique time slots for courses on this day using actual start times
-      const coursesForDay = props.availableCourses.filter(course => course.day === dayShort)
+      // Convert display day code back to data day code for filtering
+      let dataDayCode = dayShort
+      if (dayShort === 'MON') dataDayCode = 'MO'
+      else if (dayShort === 'TUE') dataDayCode = 'DI'
+      else if (dayShort === 'WED') dataDayCode = 'MI'
+      else if (dayShort === 'THU') dataDayCode = 'DO'
+      else if (dayShort === 'FRI') dataDayCode = 'FR'
+      else if (dayShort === 'SAT') dataDayCode = 'SA'
+      else if (dayShort === 'SUN') dataDayCode = 'SO'
+      
+      const coursesForDay = props.availableCourses.filter(course => course.day === dataDayCode)
       const availableSlots = new Map()
       
       coursesForDay.forEach(course => {
@@ -219,7 +223,10 @@ export default {
     watch(() => props.availableCourses, (newCourses) => {
       if (newCourses && newCourses.length > 0) {
         const daysWithCourses = new Set()
-        newCourses.forEach(course => daysWithCourses.add(course.day))
+        newCourses.forEach(course => {
+          // Translate data day code to display day code
+          daysWithCourses.add(translateDayCode(course.day))
+        })
         
         // Initialize slots for new days that don't have configuration yet
         // And add new slots to existing days
@@ -247,16 +254,22 @@ export default {
         if (hasChanges) {
           updateConstraints()
         }
-        if (hasChanges) {
-          updateConstraints()
-        }
       }
     }, { deep: true, immediate: true })
 
+    // Get day-specific colors from centralized system
+    const getDayHeaderClasses = (day) => {
+      const colors = getDayColors()
+      const dayColors = colors[day.name.toLowerCase()]
+      return `text-xs font-medium px-2 py-1 rounded ${dayColors}`
+    }
+
     return {
+      t,
       timeSlots,
       localConstraints,
       availableDays,
+      getDayHeaderClasses,
       updateConstraints,
       updateMaxGapSlots,
       getAvailableSlotsForDay,

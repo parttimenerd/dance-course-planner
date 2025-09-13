@@ -17,6 +17,17 @@
     
     <!-- Preload critical resources -->
     <link rel="preload" href="/schedule.json" as="fetch" crossorigin="anonymous" />
+    
+    <!-- Set language and title based on browser language -->
+    <script>
+      const lang = (navigator.language || navigator.userLanguage).startsWith('de') ? 'de' : 'en';
+      document.documentElement.lang = lang;
+      if (lang === 'de') {
+        document.title = 'Tanzkurs Planer';
+        document.querySelector('meta[name="description"]').content = 'Planen Sie Ihren perfekten Tanzstundenplan mit intelligenter Constraint-Lösung';
+        document.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Tanzplaner';
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>

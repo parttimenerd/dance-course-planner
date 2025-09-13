@@ -5,12 +5,13 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <h1 class="text-2xl font-bold text-gray-900">
-                  Dance Course Planner
+            {{ t('Dance Course Planner') }}
           </h1>
           <div class="flex items-center space-x-4">
             <div class="text-sm text-gray-500">
-              {{ totalCourses }} courses available
+              {{ totalCourses }} {{ t('courses available') }}
             </div>
+            <LanguageSwitcher />
           </div>
         </div>
       </div>
@@ -20,7 +21,7 @@
       <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
-        <p class="mt-2 text-gray-600">Loading schedule data...</p>
+        <p class="mt-2 text-gray-600">{{ t('Loading schedule data...') }}</p>
       </div>
 
       <!-- Error State -->
@@ -28,7 +29,7 @@
         <div class="flex">
           <div class="text-red-400">⚠️</div>
           <div class="ml-3">
-            <h3 class="text-sm font-medium text-red-800">Error loading schedule</h3>
+            <h3 class="text-sm font-medium text-red-800">{{ t('Error loading schedule') }}</h3>
             <p class="mt-1 text-sm text-red-700">{{ error }}</p>
           </div>
         </div>
@@ -73,17 +74,23 @@ import { useUrlState } from './composables/useUrlState.js'
 import { useScheduleData } from './composables/useScheduleData.js'
 import { useConstraintSolver } from './composables/useConstraintSolver.js'
 import { useCookieState } from './composables/useCookieState.js'
+import { useI18n } from './composables/useI18n.js'
 import { DanceCourseScheduler } from './constraintSolver.js'
 import ConstraintPanel from './components/ConstraintPanel.vue'
 import ScheduleResults from './components/ScheduleResults.vue'
+import LanguageSwitcher from './components/LanguageSwitcher.vue'
 
 export default {
   name: 'App',
   components: {
     ConstraintPanel,
-    ScheduleResults
+    ScheduleResults,
+    LanguageSwitcher
   },
   setup() {
+    // Internationalization
+    const { t, dayNames } = useI18n()
+    
     // URL state management
     const { loadFromUrl, saveToUrl, generateShareUrl } = useUrlState()
     
@@ -107,17 +114,6 @@ export default {
 
     // Constraints - load from cookies first, then override with URL if present
     const constraints = reactive(initialState.constraints)
-
-    // Week days
-    const weekDays = [
-      { short: 'MO', long: 'Monday' },
-      { short: 'DI', long: 'Tuesday' },
-      { short: 'MI', long: 'Wednesday' },
-      { short: 'DO', long: 'Thursday' },
-      { short: 'FR', long: 'Friday' },
-      { short: 'SA', long: 'Saturday' },
-      { short: 'SO', long: 'Sunday' }
-    ]
 
     // Computed properties
     const totalCourses = computed(() => {
@@ -174,6 +170,14 @@ export default {
           if (urlConstraints.highlightSchedule !== undefined) {
             highlightedSchedule.value = urlConstraints.highlightSchedule
           }
+        }
+        
+        // Auto-generate schedules if courses are already selected (from cookies or URL)
+        if (constraints.selectedCourseNames && constraints.selectedCourseNames.length > 0) {
+          // Small delay to ensure all reactive updates are complete
+          setTimeout(() => {
+            generateSchedules()
+          }, 100)
         }
         
       } catch (err) {
@@ -363,6 +367,9 @@ export default {
     })
 
     return {
+      // I18n
+      t,
+      // State
       loading,
       error,
       generating,
@@ -372,11 +379,12 @@ export default {
       suggestions,
       constraints,
       scheduleData,
-      weekDays,
+      weekDays: dayNames,
       totalCourses,
       courseGroups,
       canGenerate,
       highlightedSchedule,
+      // Methods
       generateSchedules,
       handleLocationChange,
       handleScheduleShare,

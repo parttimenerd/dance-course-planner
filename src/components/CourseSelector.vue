@@ -1,7 +1,7 @@
 <template>
   <div class="mb-6">
     <label class="block text-sm font-medium text-gray-700 mb-2">
-      🎭 Select Course Names
+      🎭 {{ t('Select Courses') }}
     </label>
     
     <!-- Search/Filter -->
@@ -43,7 +43,7 @@
             <span
               v-for="course in instances.slice(0, 6)"
               :key="course.id"
-              class="px-2 py-1 text-xs bg-gray-100 text-gray-600 rounded-full"
+              :class="getTimeSlotClasses(course)"
             >
               {{ formatTimeSlot(course) }}
             </span>
@@ -57,7 +57,7 @@
 
     <!-- Selected Count -->
     <div class="mt-2 text-xs text-gray-500">
-      {{ selectedCourseNames.length }} course{{ selectedCourseNames.length !== 1 ? 's' : '' }} selected
+      {{ selectedCourseNames.length }} {{ selectedCourseNames.length === 1 ? t('course') : t('courses') }} {{ t('selected') }}
     </div>
 
     <!-- Quick Actions -->
@@ -66,13 +66,13 @@
         @click="selectAll"
         class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
       >
-        Select All
+        {{ t('Select All') }}
       </button>
       <button
         @click="clearAll"
         class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
       >
-        Clear All
+        {{ t('Clear All') }}
       </button>
     </div>
   </div>
@@ -80,6 +80,7 @@
 
 <script>
 import { ref, computed, watch } from 'vue'
+import { useI18n } from '../composables/useI18n.js'
 
 export default {
   name: 'CourseSelector',
@@ -95,6 +96,8 @@ export default {
   },
   emits: ['update:modelValue'],
   setup(props, { emit }) {
+    const { t, translateDayCode, getDayColors } = useI18n()
+    
     const selectedCourseNames = ref([...props.modelValue])
     const searchQuery = ref('')
 
@@ -125,7 +128,11 @@ export default {
         return normalizedA.localeCompare(normalizedB)
       })
       
-      return groups
+      // Sort the course instances within each group by start time
+      return groups.map(([courseName, instances]) => [
+        courseName,
+        [...instances].sort((a, b) => a.startTime - b.startTime)
+      ])
     })
 
     const isCourseNameSelected = (courseName) => {
@@ -150,7 +157,14 @@ export default {
         hour12: false 
       })
       
-      return `${course.day} ${timeStr}`
+      return `${translateDayCode(course.day)} ${timeStr}`
+    }
+
+    // Get day-specific colors from centralized system
+    const getTimeSlotClasses = (course) => {
+      const dayCode = translateDayCode(course.day)
+      const colors = getDayColors(dayCode)
+      return `px-2 py-1 text-xs rounded-full ${colors.bg} ${colors.text}`
     }
 
     const updateSelection = () => {
@@ -174,12 +188,14 @@ export default {
     })
 
     return {
+      t,
       selectedCourseNames,
       searchQuery,
       filteredCourseGroups,
       isCourseNameSelected,
       toggleCourseName,
       formatTimeSlot,
+      getTimeSlotClasses,
       updateSelection,
       selectAll,
       clearAll
