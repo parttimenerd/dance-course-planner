@@ -40,12 +40,19 @@ npm run dev
 ```
 
 ## Build
+
 To build the project for production, run:
 
 ```bash
 npm run build
 ```
-The built files will be in the `dist` directory.
+
+The built files will be in the `dist` directory. The build process will automatically:
+
+- Bundle and optimize all assets with the correct base path
+- Copy `schedule.json` from the root directory to the `dist` folder (if it exists)
+
+**Note**: Make sure you have `schedule.json` in the root directory before building, otherwise you'll need to add it manually to the `dist` folder after deployment.
 
 ## Deployment
 
@@ -63,9 +70,10 @@ If you're deploying to a subdirectory (like `/dance-planner/`), the Vite configu
 After building:
 
 1. Upload the contents of the `dist` folder to your server's `/dance-planner/` directory
-2. Ensure your web server is configured to serve static files from this directory
-3. **Important**: Place the `schedule.json` file in the `/dance-planner/` directory (same level as `index.html`)
-4. The app will automatically load files from the correct subdirectory path
+2. Ensure your web server is configured to serve static files from this directory  
+3. The `schedule.json` file will be automatically included in the build
+
+**Note**: If you don't have `schedule.json` in the root directory during build, you'll need to upload it manually to the `/dance-planner/` directory.
 
 Example file structure on server:
 
