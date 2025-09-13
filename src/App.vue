@@ -8,9 +8,6 @@
             {{ t('Dance Course Planner') }}
           </h1>
           <div class="flex items-center space-x-4">
-            <div v-if="!loading && !error" class="text-sm text-gray-500">
-              {{ totalCourses }} {{ t('courses available') }}
-            </div>
             <LanguageSwitcher />
           </div>
         </div>
