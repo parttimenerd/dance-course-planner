@@ -9,7 +9,24 @@ app.mount('#app')
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('/sw.js')
+      // First, unregister any existing service workers from different scopes
+      const existingRegistrations = await navigator.serviceWorker.getRegistrations()
+      for (const registration of existingRegistrations) {
+        const scope = registration.scope
+        const currentScope = `${window.location.origin}${import.meta.env.BASE_URL}`
+        
+        // Unregister if the scope doesn't match our current base path
+        if (scope !== currentScope && scope !== `${currentScope}/`) {
+          console.log('Unregistering old service worker from scope:', scope)
+          await registration.unregister()
+        }
+      }
+      
+      // Now register the service worker with correct scope
+      const registration = await navigator.serviceWorker.register(
+        `${import.meta.env.BASE_URL}sw.js`,
+        { scope: import.meta.env.BASE_URL }
+      )
       console.log('Service worker registered:', registration)
     } catch (error) {
       console.error('Service worker registration failed:', error)

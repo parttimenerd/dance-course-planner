@@ -2,106 +2,20 @@
   "name": "Dance Course Planner",
   "short_name": "DancePlanner",
   "description": "Plan your perfect dance course schedule with smart constraint solving",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#f9fafb",
   "theme_color": "#3b82f6",
   "orientation": "portrait-primary",
-  "scope": "/",
+  "scope": "./",
   "categories": ["education", "lifestyle", "productivity"],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "platform": "wide"
-    },
-    {
-      "src": "/screenshots/mobile.png",
-      "sizes": "375x667",
-      "type": "image/png"
-    }
-  ],
   "icons": [
     {
-      "src": "/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Quick Schedule",
-      "description": "Generate a new schedule quickly",
-      "url": "/?action=generate",
-      "icons": [
-        {
-          "src": "/icon-96.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Share",
-      "description": "Share your current configuration",
-      "url": "/?action=share",
-      "icons": [
-        {
-          "src": "/icon-96.png",
-          "sizes": "96x96"
-        }
-      ]
+      "src": "data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3e%3ctext y='.9em' font-size='90'%3e💃🕺%3c/text%3e%3c/svg%3e",
+      "sizes": "any",
+      "type": "image/svg+xml"
     }
   ],
   "related_applications": [],
-  "prefer_related_applications": false,
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "launch_handler": {
-    "client_mode": "navigate-new"
-  }
+  "prefer_related_applications": false
 }

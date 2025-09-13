@@ -53,11 +53,31 @@ The built files will be in the `dist` directory.
 
 If you're deploying to a subdirectory (like `/dance-planner/`), the Vite configuration is already set up with `base: '/dance-planner/'`.
 
+**Key files have been configured for subdirectory deployment:**
+
+- `vite.config.js`: Set with `base: '/dance-planner/'`
+- `index.html`: Cleaned up asset references  
+- `manifest.json`: Uses relative paths (`./`) for subdirectory compatibility
+- All JavaScript imports: Use `import.meta.env.BASE_URL` for dynamic path resolution
+
 After building:
 
 1. Upload the contents of the `dist` folder to your server's `/dance-planner/` directory
 2. Ensure your web server is configured to serve static files from this directory
-3. Make sure the `schedule.json` file is accessible at `https://yourdomain.com/dance-planner/schedule.json`
+3. **Important**: Place the `schedule.json` file in the `/dance-planner/` directory (same level as `index.html`)
+4. The app will automatically load files from the correct subdirectory path
+
+Example file structure on server:
+
+```text
+/dance-planner/
+  ├── index.html
+  ├── schedule.json
+  ├── assets/
+  │   ├── index-*.css
+  │   └── index-*.js
+  └── sw.js
+```
 
 ### For Root Domain Deployment
 
@@ -74,6 +94,7 @@ Then rebuild the project.
 - **MIME Type Errors**: Usually caused by incorrect `base` configuration in `vite.config.js`
 - **404 Errors**: Make sure all files from `dist` are uploaded and the server can serve static files
 - **Missing schedule.json**: The app requires `schedule.json` to be manually placed in the deployment directory
+- **Service Worker Issues**: If you previously deployed to a different path, old service workers might interfere. Clear your browser's application data/storage for the domain, or wait for the app to automatically clean up old service workers on the first load.
 
 ## Contributing
 
