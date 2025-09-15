@@ -42,8 +42,8 @@
         <h4 class="text-xs font-medium text-gray-700 mb-2">{{ t('Weekly Overview') }}</h4>
         <div class="border border-gray-200 rounded-lg overflow-hidden">
           <!-- Day headers -->
-          <div class="grid gap-0" style="grid-template-columns: 60px repeat(7, 1fr);">
-            <div class="bg-gray-100 text-gray-700 text-xs font-medium py-2 px-1 border-b border-r border-gray-200">
+          <div class="grid grid-cols-8 gap-0">
+            <div class="bg-gray-100 text-gray-700 text-xs font-medium py-2 px-2 border-b border-r border-gray-200">
               {{ t('Time') }}
             </div>
             <div v-for="day in weekDays" :key="day" 
@@ -55,27 +55,21 @@
             </div>
           </div>
           <!-- Time slot rows -->
-          <div v-for="timeSlot in allTimeSlots" :key="timeSlot" class="grid gap-0" style="grid-template-columns: 60px repeat(7, 1fr);">
+          <div v-for="timeSlot in allTimeSlots" :key="timeSlot" class="grid grid-cols-8 gap-0">
             <!-- Time label -->
-            <div class="bg-gray-50 text-gray-600 text-xs py-2 px-1 border-b border-r border-gray-200 font-mono">
+            <div class="bg-gray-50 text-gray-600 text-xs py-2 px-2 border-b border-r border-gray-200 font-mono">
               {{ formatTime(timeSlot) }}
             </div>
             <!-- Course cells for each day -->
             <div v-for="day in weekDays" :key="`${timeSlot}-${day}`" 
                  :class="getTimeSlotCellClasses(day, timeSlot)">
-              <!-- Show course if there's one at this time -->
               <template v-if="getCourseForDayAndTime(day, timeSlot)">
-                <div class="bg-primary-100 text-primary-800 rounded m-1 px-1 py-1 text-xs leading-tight w-full overflow-hidden">
-                  <div class="font-medium text-center break-words overflow-hidden text-ellipsis">
-                    {{ getCourseForDayAndTime(day, timeSlot).name }}<PairIcon :show="!!safeIsPairOnlyCourse(getCourseForDayAndTime(day, timeSlot).id)" />
-                  </div>
-                </div>
-              </template>
-              <!-- Show gap slot if this is a gap between courses -->
-              <template v-else-if="isGapSlot(day, timeSlot)">
-                <div class="bg-yellow-50 border border-yellow-200 rounded m-1 px-1 py-1 text-xs leading-tight w-full overflow-hidden">
-                  <div class="font-medium text-center text-yellow-700 overflow-hidden text-ellipsis">
-                    ⏰ {{ t('Free Time') }}
+                <div class="bg-primary-100 text-primary-800 rounded m-1 px-1 py-1 text-xs leading-tight">
+                  <div class="font-medium text-center break-words">
+                    {{ getCourseForDayAndTime(day, timeSlot).name }}
+                    <span v-if="safeIsPairOnlyCourse(getCourseForDayAndTime(day, timeSlot).id)" 
+                          class="ml-1"
+                          :title="t('Pair Course')">💃🕺</span>
                   </div>
                 </div>
               </template>
@@ -97,8 +91,11 @@
                 {{ translateDayCode(course.day) }}
               </span>
               <div>
-                <p class="text-sm font-medium text-gray-900 break-words">
-                  {{ course.name }}<PairIcon :show="!!safeIsPairOnlyCourse(course.id)" custom-class="ml-2" />
+                <p class="text-sm font-medium text-gray-900">
+                  {{ course.name }}
+                  <span v-if="safeIsPairOnlyCourse(course.id)" 
+                        class="ml-2"
+                        :title="t('Pair Course')">💃🕺</span>
                 </p>
                 <p class="text-xs text-gray-600">
                   {{ course.type }}
@@ -115,7 +112,7 @@
             <p v-if="course.room" class="text-xs text-gray-600">{{ course.room }}</p>
             
             <!-- Registration Button (only show if logged into Nimbuscloud) -->
-            <div v-if="nimbusIsLoggedIn && hasValidCustomerId" class="mt-2">
+            <div v-if="nimbusIsLoggedIn" class="mt-2">
               <RegistrationButton
                 :course-id="course.id"
                 :date-id="course.id"
@@ -157,7 +154,7 @@
           </button>
 
           <!-- Registration Options (only if logged into Nimbuscloud) -->
-          <template v-if="nimbusIsLoggedIn && hasValidCustomerId">
+          <template v-if="nimbusIsLoggedIn">
             <button
               @click="registerToAllCourses"
               :disabled="isBulkRegistering || !hasUnregisteredCourses"
@@ -188,15 +185,12 @@ import { useNimbuscloud } from '../composables/useNimbuscloud.js'
 import { useSavedSolutions } from '../composables/useSavedSolutions.js'
 import ShareButton from './ShareButton.vue'
 import RegistrationButton from './RegistrationButton.vue'
-import PairIcon from './PairIcon.vue'
-import { isWithinRegistrationWindow } from '../utils/dateUtils.js'
 
 export default {
   name: 'ScheduleSolution',
   components: {
     ShareButton,
-    RegistrationButton,
-    PairIcon
+    RegistrationButton
   },
   props: {
     schedule: {
@@ -214,10 +208,6 @@ export default {
     highlighted: {
       type: Boolean,
       default: false
-    },
-    courseDurationMinutes: {
-      type: Number,
-      default: 70 // Default: 60min class + 10min break
     }
   },
   emits: ['share', 'toggle-highlight'],
@@ -231,17 +221,13 @@ export default {
       isRegistrationInProgress,
       isPairOnlyCourse,
       fetchSchedule,
-      selectedWeek,
-      hasValidCustomerId
+      selectedWeek
     } = useNimbuscloud()
     
     const { 
       isSolutionSaved, 
       toggleSavedSolution 
     } = useSavedSolutions()
-    
-    // Log the schedule structure for debugging
-    // (Removed verbose logging)
     
     // Bulk registration state
     const isBulkRegistering = ref(false)
@@ -253,27 +239,7 @@ export default {
     const safeIsPairOnlyCourse = computed(() => {
       return (courseId) => {
         try {
-          // First, try to find the course in our schedule and check its pairOnly property
-          const course = props.schedule.courses.find(c => c.id === courseId)
-          if (course) {
-            // Check multiple possible property names for pair courses
-            const isPair = !!(course.pairOnly || 
-                          course.isPairOnly || 
-                          course.pair_only ||
-                          course.requiresPartner ||
-                          course.type === 'pair' ||
-                          course.courseType === 'pair' ||
-                          (course.name && course.name.toLowerCase().includes('pair')))
-            
-            return isPair
-          }
-          
-          // Fallback to nimbus cloud function if course not found in schedule
-          if (typeof isPairOnlyCourse === 'function') {
-            return !!(isPairOnlyCourse(courseId))
-          }
-          
-          return false
+          return typeof isPairOnlyCourse === 'function' ? isPairOnlyCourse(courseId) : false
         } catch (error) {
           console.warn('Error checking pair course status:', error)
           return false
@@ -329,86 +295,53 @@ export default {
       return parseFloat(averageGap.value) > 0.2 // Only show warning for gaps > 0.2h (12 minutes)
     })
 
-    // Check if there are unregistered courses in this schedule (within registration window)
+    // Check if there are unregistered courses in this schedule
     const hasUnregisteredCourses = computed(() => {
       return props.schedule.courses.some(course => 
-        isWithinRegistrationWindow(course.startTime) && !isRegisteredForCourse(course.id, course.id)
+        !isRegisteredForCourse(course.id, course.id)
       )
     })
 
-    // Check if there are registered courses in this schedule (within registration window)
+    // Check if there are registered courses in this schedule
     const hasRegisteredCourses = computed(() => {
       return props.schedule.courses.some(course => 
-        isWithinRegistrationWindow(course.startTime) && isRegisteredForCourse(course.id, course.id)
+        isRegisteredForCourse(course.id, course.id)
       )
     })
 
     const weekDays = computed(() => dayNames.value.map(day => day.short))
 
-    // Get all unique time slots including gaps between courses
+    // Get all unique time slots from all courses in Nimbus Cloud data for the grid
     const allTimeSlots = computed(() => {
-      console.log('🔍 [GAP SLOTS] Computing allTimeSlots for schedule:', {
-        scheduleIndex: props.index,
-        totalCourses: props.schedule.courses.length,
-        courseTimes: props.schedule.courses.map(c => ({
-          name: c.name.substring(0, 20) + '...',
-          day: c.day,
-          start: new Date(c.startTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }),
-          end: new Date(c.endTime).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-        }))
-      })
-      
       const timeSlots = new Set()
       
-      // Get all course start times first
+      // First, add time slots from the current schedule
       props.schedule.courses.forEach(course => {
+        // Ensure we're working with Date objects
         const startTime = new Date(course.startTime)
-        const startTimeKey = `${startTime.getHours().toString().padStart(2, '0')}:${startTime.getMinutes().toString().padStart(2, '0')}`
-        timeSlots.add(startTimeKey)
+        // Create a unique key based on hours and minutes only (ignore date)
+        const timeKey = `${startTime.getHours()}:${startTime.getMinutes()}`
+        timeSlots.add(timeKey)
       })
       
-      // Find the earliest and latest time slots for any day
-      const timeSlotsByDay = new Map()
-      props.schedule.courses.forEach(course => {
-        if (!timeSlotsByDay.has(course.day)) {
-          timeSlotsByDay.set(course.day, [])
-        }
-        timeSlotsByDay.get(course.day).push(new Date(course.startTime))
-      })
-      
-      // For each day, add all time slots between first and last
-      for (const [day, dayTimes] of timeSlotsByDay) {
-        const sortedTimes = dayTimes.sort((a, b) => a - b)
-        const firstTime = sortedTimes[0]
-        const lastTime = sortedTimes[sortedTimes.length - 1]
-        
-        // Find all course start times from the entire schedule that fall between first and last for this day
-        props.schedule.courses.forEach(course => {
-          const courseStart = new Date(course.startTime)
-          if (courseStart >= firstTime && courseStart <= lastTime) {
-            const timeKey = `${courseStart.getHours().toString().padStart(2, '0')}:${courseStart.getMinutes().toString().padStart(2, '0')}`
-            timeSlots.add(timeKey)
-          }
+      // If we have access to the full schedule data from config, add all time slots
+      if (props.config && props.config.scheduleData && props.config.scheduleData.courses) {
+        props.config.scheduleData.courses.forEach(course => {
+          const startTime = new Date(course.startTime)
+          const timeKey = `${startTime.getHours()}:${startTime.getMinutes()}`
+          timeSlots.add(timeKey)
         })
       }
       
-      console.log('🔍 [GAP SLOTS] All time slots (course start times only):', Array.from(timeSlots).sort())
-      
-      // Convert to sorted array of Date objects
-      const sortedSlots = Array.from(timeSlots)
+      // Convert to sorted array of Date objects - only real course times
+      return Array.from(timeSlots)
         .map(timeKey => {
           const [hours, minutes] = timeKey.split(':').map(Number)
-          // Create a consistent base date for all time slots (just for display)
+          // Create a consistent date for all time slots (just for display)
           const date = new Date(2023, 0, 1, hours, minutes)
           return date
         })
         .sort((a, b) => a.getHours() - b.getHours() || a.getMinutes() - b.getMinutes())
-      
-      console.log('🔍 [GAP SLOTS] Final sorted slots:', sortedSlots.map(slot => 
-        slot.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })
-      ))
-      
-      return sortedSlots
     })
 
     const getCoursesForDay = (displayDayCode) => {
@@ -424,11 +357,9 @@ export default {
       else if (displayDayCode === 'SAT') dataDayCode = 'SA'
       else if (displayDayCode === 'SUN') dataDayCode = 'SO'
       
-      const coursesForDay = props.schedule.courses
+      return props.schedule.courses
         .filter(course => course.day === dataDayCode)
         .sort((a, b) => a.startTime - b.startTime)
-      
-      return coursesForDay
     }
 
     const dayHasCourses = (displayDayCode) => {
@@ -458,40 +389,10 @@ export default {
       const coursesForDay = getCoursesForDay(displayDayCode)
       return coursesForDay.find(course => {
         const courseStartTime = new Date(course.startTime)
-        
-        // Only match if the time slot exactly matches the course start time
-        return courseStartTime.getHours() === timeSlot.getHours() &&
+        // Match based on hours and minutes only, not full timestamp
+        return courseStartTime.getHours() === timeSlot.getHours() && 
                courseStartTime.getMinutes() === timeSlot.getMinutes()
       })
-    }
-
-    // Check if a time slot is a gap slot (between two courses)
-    const isGapSlot = (displayDayCode, timeSlot) => {
-      const coursesForDay = getCoursesForDay(displayDayCode)
-      if (coursesForDay.length < 2) return false
-      
-      const sortedCourses = coursesForDay.sort((a, b) => new Date(a.startTime) - new Date(b.startTime))
-      
-      // Check if this time slot falls between two courses and represents an existing slot
-      for (let i = 0; i < sortedCourses.length - 1; i++) {
-        const currentEnd = new Date(sortedCourses[i].endTime)
-        const nextStart = new Date(sortedCourses[i + 1].startTime)
-        
-        // Check if timeSlot falls between current course end and next course start
-        if (timeSlot > currentEnd && timeSlot < nextStart) {
-          // Only show as gap slot if this timeSlot corresponds to an existing course start time
-          // from the entire schedule (i.e., it's a valid slot that could be scheduled)
-          const isExistingSlot = props.schedule.courses.some(course => {
-            const courseStart = new Date(course.startTime)
-            return courseStart.getHours() === timeSlot.getHours() &&
-                   courseStart.getMinutes() === timeSlot.getMinutes()
-          })
-          
-          // It's a gap slot only if it's an existing course slot that fits in the gap
-          return isExistingSlot
-        }
-      }
-      return false
     }
 
     // Get CSS classes for time slot cells
@@ -500,39 +401,31 @@ export default {
       const hasCourse = getCourseForDayAndTime(day, timeSlot) !== undefined
       const dayHasAnyCourses = dayHasCourses(day)
       
-      // Base classes that ensure consistent cell sizing with explicit width constraints
-      // Use flex-shrink-0 and explicit width to prevent content from affecting cell size
-      const baseClasses = 'min-h-[40px] py-1 px-1 border-b border-r border-gray-200 last:border-r-0 flex-shrink-0 w-full overflow-hidden'
-      
       if (!dayHasAnyCourses) {
-        // Entire day has no courses - make it really muted but keep same size
-        return `${baseClasses} bg-gray-100 text-gray-300 opacity-30 border-gray-300`
+        // Entire day has no courses - make it really muted
+        return [
+          'min-h-[40px] py-1 px-1 border-b border-r border-gray-200 last:border-r-0',
+          'bg-gray-100 text-gray-300 opacity-30 border-gray-300'
+        ].join(' ')
       }
       
-      // Apply day-specific colors but maintain consistent sizing
-      return `${baseClasses} ${colors.border} ${hasCourse ? 'bg-white' : 'bg-gray-50 opacity-60'}`
+      return [
+        'min-h-[40px] py-1 px-1 border-b border-r border-gray-200 last:border-r-0',
+        colors.border,
+        hasCourse ? 'bg-white' : 'bg-gray-50 opacity-60'
+      ].join(' ')
     }
 
     const hasSignificantGap = (courses, index) => {
       if (index === 0) return false
       const prevCourse = courses[index - 1]
       const currentCourse = courses[index]
-      
-      // Calculate gap between end of previous course and start of current course
-      const prevCourseEnd = new Date(prevCourse.startTime).getTime() + (props.courseDurationMinutes * 60 * 1000)
-      const currentCourseStart = new Date(currentCourse.startTime).getTime()
-      const gapMinutes = (currentCourseStart - prevCourseEnd) / (1000 * 60)
-      
-      // Only show gap if it's at least one slot duration (significant gap)
-      return gapMinutes >= props.courseDurationMinutes
+      const gapMinutes = (currentCourse.startTime - prevCourse.endTime) / (1000 * 60)
+      return gapMinutes > 12 // Show gap if more than 12 minutes (0.2h)
     }
 
     const formatGap = (prevCourse, currentCourse) => {
-      // Calculate gap between end of previous course and start of current course
-      const prevCourseEnd = new Date(prevCourse.startTime).getTime() + (props.courseDurationMinutes * 60 * 1000)
-      const currentCourseStart = new Date(currentCourse.startTime).getTime()
-      const gapMinutes = (currentCourseStart - prevCourseEnd) / (1000 * 60)
-      
+      const gapMinutes = (currentCourse.startTime - prevCourse.endTime) / (1000 * 60)
       const hours = Math.floor(gapMinutes / 60)
       const minutes = Math.round(gapMinutes % 60)
       
@@ -693,7 +586,7 @@ export default {
     const handleRegister = async ({ courseId, dateId }) => {
       try {
         await registerForCourse(courseId, dateId)
-        // Registration successful
+        console.log('Successfully registered for course:', courseId, dateId)
       } catch (error) {
         console.error('Registration failed:', error)
         // Could emit an error event or show notification here
@@ -703,7 +596,7 @@ export default {
     const handleUnregister = async ({ courseId, dateId }) => {
       try {
         await unregisterFromCourse(courseId, dateId)
-        // Unregistration successful
+        console.log('Successfully unregistered from course:', courseId, dateId)
       } catch (error) {
         console.error('Unregistration failed:', error)
         // Could emit an error event or show notification here
@@ -716,12 +609,12 @@ export default {
       
       isBulkRegistering.value = true
       try {
-        // Only register for courses that aren't already registered AND are within registration window
+        // Only register for courses that aren't already registered
         const unregisteredCourses = props.schedule.courses.filter(course => 
-          isWithinRegistrationWindow(course.startTime) && !isRegisteredForCourse(course.id, course.id)
+          !isRegisteredForCourse(course.id, course.id)
         )
         
-        console.log(`Registering for ${unregisteredCourses.length} unregistered courses (within 6-day window)`)
+        console.log(`Registering for ${unregisteredCourses.length} unregistered courses`)
         
         // Register for each unregistered course
         for (const course of unregisteredCourses) {
@@ -745,12 +638,12 @@ export default {
       
       isBulkRegistering.value = true
       try {
-        // Only unregister from courses that are already registered AND are within registration window
+        // Only unregister from courses that are already registered
         const registeredCourses = props.schedule.courses.filter(course => 
-          isWithinRegistrationWindow(course.startTime) && isRegisteredForCourse(course.id, course.id)
+          isRegisteredForCourse(course.id, course.id)
         )
         
-        console.log(`Unregistering from ${registeredCourses.length} registered courses (within 6-day window)`)
+        console.log(`Unregistering from ${registeredCourses.length} registered courses`)
         
         // Unregister from each registered course
         for (const course of registeredCourses) {
@@ -799,7 +692,6 @@ export default {
       getDayBadgeClasses,
       getLocalDayColumnClasses,
       getCourseForDayAndTime,
-      isGapSlot,
       getTimeSlotCellClasses,
       getDayColors,
       hasSignificantGap,
@@ -827,9 +719,7 @@ export default {
       registerToAllCourses,
       unregisterFromAllCourses,
       exportToCalendar,
-      printSchedule,
-      // Expose for template conditions
-      hasValidCustomerId
+      printSchedule
     }
   }
 }

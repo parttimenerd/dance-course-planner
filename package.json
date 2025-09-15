@@ -9,7 +9,15 @@
     "build:production": "npm run build && npm run build:server",
     "build:server": "node scripts/build-server.js",
     "preview": "vite preview",
-    "serve": "node server.js"
+    "serve": "node server.js",
+    "test": "node tests/test-solver.js",
+    "test:all": "node tests/run-all-tests.js",
+    "test:comprehensive": "node tests/test-comprehensive-solver.js",
+    "test:enumeration": "node tests/test-comprehensive-enumeration.js",
+    "test:stress": "node tests/test-advanced-stress.js",
+    "test:output": "node tests/test-output-structure.js",
+    "test:solutions": "node tests/test-solution-enumeration.js",
+    "test:hinting": "node tests/test-hinting-solver.js"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.0.0",

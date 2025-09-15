@@ -94,7 +94,7 @@ const server = http.createServer((req, res) => {
 
 server.listen(PORT, () => {
   console.log(\`🚀 Dance Course Planner running on http://localhost:\${PORT}\`);
-  console.log('📋 Don\\'t forget to place your schedule.json file in this directory');
+  console.log('📋 Users can login with their Nimbuscloud credentials in the app');
 });`
   
   await fs.writeFile(path.join(deployDir, 'server.js'), serverCode)
@@ -128,9 +128,9 @@ This package contains the built Dance Course Planner application ready for deplo
 ## Quick Start
 
 1. Upload all files to your server
-2. Place your \`schedule.json\` file in the same directory
-3. Install Node.js (version 14 or higher) on your server
-4. Run: \`node server.js\`
+2. Install Node.js (version 14 or higher) on your server
+3. Run: \`node server.js\`
+4. Users can login with their Nimbuscloud credentials in the app
 
 The application will be available at http://your-server:3000
 
@@ -140,7 +140,6 @@ The application will be available at http://your-server:3000
 - \`assets/\` - JavaScript and CSS files  
 - \`server.js\` - Simple Node.js server
 - \`package.json\` - Server configuration
-- \`schedule.json\` - Your course schedule data (you need to provide this)
 
 ## Alternative Deployment
 
@@ -150,7 +149,7 @@ If you prefer not to use Node.js, you can serve the static files using any web s
 - Nginx: Configure to serve static files
 - Any static hosting service (Netlify, Vercel, etc.)
 
-Just make sure your \`schedule.json\` file is accessible at the root URL.
+The app connects directly to Nimbuscloud when users login with their credentials.
 
 ## Environment Variables
 
@@ -177,8 +176,8 @@ For issues or questions, please check the main project repository.
       console.log('🎉 Deployment package ready!')
       console.log('📋 Next steps:')
       console.log('   1. Extract dance-course-planner-deploy.zip on your server')
-      console.log('   2. Add your schedule.json file')
-      console.log('   3. Run: node server.js')
+      console.log('   2. Run: node server.js')
+      console.log('   3. Users can login with their Nimbuscloud credentials in the app')
       resolve()
     })
     

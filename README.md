@@ -1,38 +1,54 @@
 # Dance Course Planner
 
-Select dance courses from [nimbuscloud.at](https://community.nimbuscloud.at/#app/schedule/)
-and generate a personalized schedule.
-
 Are you tired of manually checking the dance course schedule every week and trying to fit?
 Then this tool is for you!
 
-*This is just a personal tool and not affiliated with Nimbus Cloud.*
+*This is just a personal tool and not affiliated with Nimbus Cloud, it just adds some convenience features on top of their website.*
 
 ## Features
 
-- Loads the schedule for a specified week from the schedule.json (download it yourself)
-- Has a dev server that serves the schedule.json and the single file web app
-- Allows selection of dance courses by their names
-- Allows to give constraints
-  - No course before a certain time
-  - No course after a certain time
-  - Days with courses
-  - Maximum time between courses
-  - Not more than one course of the same name per day
-  - Maximum number of courses per day
-  - No courses on certain days
-- Then shows all possible schedules that meet the constraints in a simple
-  table and list view
-- All this as a responsive single file web app with vue.js and tailwindcss
-- No backend, all in the browser, usable from mobile devices
+- **Nimbuscloud Integration**: Login directly with your Nimbuscloud credentials to access current course data
+- **Course Selection**: Choose from available dance courses by their names
+- **Constraint-Based Planning**
+- **Schedule Generation**: Shows all possible schedules that meet your constraints
+- **Multiple Views**: Simple table and list view for easy comparison
+- **Responsive Design**: Single file web app with Vue.js and Tailwind CSS
+- **Mobile Friendly**: No backend required, works on all devices
+- **Privacy Focused**: No data is stored or transmitted to third parties and no data is stored on servers other than Nimbuscloud
+
+## Configuration
+
+The app uses a simple JSON configuration file for basic settings. **The app works without any configuration** using sensible defaults.
+
+1. **Copy the sample config**: `cp src/config/app.config.sample.json src/config/app.config.json`
+2. **Edit the configuration** to match your preferences:
+
+   ```json
+   {
+     "courseDurationMinutes": 70,
+     "locationSelector": {
+       "showLocationSelector": false,
+       "defaultLocation": "Karlsruhe"
+     }
+   }
+   ```
+
+### Configuration Options
+
+- **`courseDurationMinutes`**: Duration of each course in minutes (default: 70 minutes = 60min class + 10min break)
+- **`locationSelector.showLocationSelector`**: Whether to show the location selector dropdown (default: false)
+- **`locationSelector.defaultLocation`**: Default location to select when the app loads (default: "Karlsruhe")
+
+### Default Behavior (No Config File)
+
+If no `app.config.json` file exists, the application uses these defaults:
+
+- Course duration: 70 minutes
+- Location selector: **hidden** (since most users have a single location)
+- Default location: "Karlsruhe"
   
 ## Usage
 
-1. Download the schedule.json from [nimbuscloud.at](https://community.nimbuscloud.at/#app/schedule/)
-   (you need to be logged in and have access to the dance courses, use the browser dev tools to find the JSON)
-   - make sure to select all courses in the filter and apply it in the UI before downloading
-2. Place the schedule.json file in the root directory of the project
-3. Start the development server
 
 ```bash
 npm install
@@ -50,9 +66,7 @@ npm run build
 The built files will be in the `dist` directory. The build process will automatically:
 
 - Bundle and optimize all assets with the correct base path
-- Copy `schedule.json` from the root directory to the `dist` folder (if it exists)
-
-**Note**: Make sure you have `schedule.json` in the root directory before building, otherwise you'll need to add it manually to the `dist` folder after deployment.
+- Generate a production-ready single-page application
 
 ## Deployment
 
@@ -70,22 +84,7 @@ If you're deploying to a subdirectory (like `/dance-planner/`), the Vite configu
 After building:
 
 1. Upload the contents of the `dist` folder to your server's `/dance-planner/` directory
-2. Ensure your web server is configured to serve static files from this directory  
-3. The `schedule.json` file will be automatically included in the build
-
-**Note**: If you don't have `schedule.json` in the root directory during build, you'll need to upload it manually to the `/dance-planner/` directory.
-
-Example file structure on server:
-
-```text
-/dance-planner/
-  ├── index.html
-  ├── schedule.json
-  ├── assets/
-  │   ├── index-*.css
-  │   └── index-*.js
-  └── sw.js
-```
+2. Ensure your web server is configured to serve static files from this directory
 
 ### For Root Domain Deployment
 
@@ -96,13 +95,6 @@ base: '/', // instead of '/dance-planner/'
 ```
 
 Then rebuild the project.
-
-### Common Issues
-
-- **MIME Type Errors**: Usually caused by incorrect `base` configuration in `vite.config.js`
-- **404 Errors**: Make sure all files from `dist` are uploaded and the server can serve static files
-- **Missing schedule.json**: The app requires `schedule.json` to be manually placed in the deployment directory
-- **Service Worker Issues**: If you previously deployed to a different path, old service workers might interfere. Clear your browser's application data/storage for the domain, or wait for the app to automatically clean up old service workers on the first load.
 
 ## Contributing
 

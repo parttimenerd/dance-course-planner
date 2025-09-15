@@ -6,18 +6,22 @@ import { resolve } from 'path'
 export default defineConfig({
   plugins: [
     vue(),
-    // Plugin to copy schedule.json to dist folder during build
     {
-      name: 'copy-schedule',
-      writeBundle() {
-        const source = resolve(__dirname, 'schedule.json')
-        const dest = resolve(__dirname, 'dist', 'schedule.json')
+      name: 'copy-config',
+      generateBundle() {
+        // Copy app.config.json to dist if it exists
+        const configSource = resolve(__dirname, 'src/config/app.config.json')
+        const configDest = resolve(__dirname, 'dist/src/config/app.config.json')
         
-        if (existsSync(source)) {
-          copyFileSync(source, dest)
-          console.log('✅ Copied schedule.json to dist folder')
+        if (existsSync(configSource)) {
+          // Ensure the destination directory exists
+          import('fs').then(fs => {
+            fs.mkdirSync(resolve(__dirname, 'dist/src/config'), { recursive: true })
+            copyFileSync(configSource, configDest)
+            console.log('✓ Copied app.config.json to build output')
+          })
         } else {
-          console.warn('⚠️  schedule.json not found in root directory - you need to add it manually')
+          console.log('ℹ No app.config.json found, application will use defaults')
         }
       }
     }
@@ -25,7 +29,13 @@ export default defineConfig({
   base: '/dance-planner/',
   server: {
     host: true,
-    port: 3000
+    port: 3000,
+    hmr: {
+      overlay: true
+    },
+    watch: {
+      usePolling: true
+    }
   },
   build: {
     sourcemap: false // Disable source maps to avoid warnings

@@ -1,0 +1,7 @@
+{
+  "courseDurationMinutes": 70,
+  "locationSelector": {
+    "showLocationSelector": false,
+    "defaultLocation": "Karlsruhe"
+  }
+}

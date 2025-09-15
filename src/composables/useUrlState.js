@@ -55,6 +55,10 @@ export function useUrlState() {
       config.preventOverlaps = params.get('noOverlap') === 'true'
     }
 
+    if (params.has('noPair')) {
+      config.disablePairCourses = params.get('noPair') === 'true'
+    }
+
     // Parse per-day time slots
     if (params.has('timeSlots')) {
       try {
@@ -120,6 +124,10 @@ export function useUrlState() {
       params.set('noOverlap', 'true')
     }
 
+    if (config.disablePairCourses) {
+      params.set('noPair', 'true')
+    }
+
     // Save per-day time slots
     if (config.perDayTimeSlots && Object.keys(config.perDayTimeSlots).length > 0) {
       params.set('timeSlots', encodeURIComponent(JSON.stringify(config.perDayTimeSlots)))
@@ -146,9 +154,8 @@ export function useUrlState() {
 
   const generateShareUrl = (config, schedule = null) => {
     const params = new URLSearchParams()
-    
-    // Same logic as saveToUrl but return full URL
-    if (config.selectedLocation) {
+
+    if (config.selectedLocation && config.selectedLocation !== 'Karlsruhe') {
       params.set('location', config.selectedLocation)
     }
 
@@ -156,11 +163,11 @@ export function useUrlState() {
       params.set('courses', config.selectedCourseNames.join(','))
     }
 
-    if (config.earliestTimeStr) {
+    if (config.earliestTimeStr && config.earliestTimeStr.length > 0) {
       params.set('earliest', config.earliestTimeStr)
     }
 
-    if (config.latestTimeStr) {
+    if (config.latestTimeStr && config.latestTimeStr.length > 0) {
       params.set('latest', config.latestTimeStr)
     }
 
@@ -186,6 +193,10 @@ export function useUrlState() {
 
     if (config.preventOverlaps) {
       params.set('noOverlap', 'true')
+    }
+
+    if (config.disablePairCourses) {
+      params.set('noPair', 'true')
     }
 
     // Save per-day time slots

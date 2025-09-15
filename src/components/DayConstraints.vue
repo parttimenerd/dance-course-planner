@@ -48,7 +48,8 @@ export default {
 
     const localConstraints = ref({
       blockedDays: [...(props.modelValue.blockedDays || [])],
-      maxCoursesPerDay: props.modelValue.maxCoursesPerDay || 3
+      maxCoursesPerDay: props.modelValue.maxCoursesPerDay || 3,
+      disablePairCourses: props.modelValue.disablePairCourses || false
     })
 
     const updateConstraints = () => {
@@ -70,7 +71,8 @@ export default {
     watch(() => props.modelValue, (newValue) => {
       localConstraints.value = {
         blockedDays: [...(newValue.blockedDays || [])],
-        maxCoursesPerDay: newValue.maxCoursesPerDay || 3
+        maxCoursesPerDay: newValue.maxCoursesPerDay || 3,
+        disablePairCourses: newValue.disablePairCourses || false
       }
     }, { deep: true })
 

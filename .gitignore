@@ -15,6 +15,9 @@ build/
 .env.test.local
 .env.production.local
 
+# Configuration files (use sample files as templates)
+src/config/app.config.json
+
 # IDE and editor files
 .vscode/
 .idea/
@@ -97,5 +100,3 @@ jspm_packages/
 # Temporary folders
 tmp/
 temp/
-
-schedule.json

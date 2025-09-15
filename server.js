@@ -34,21 +34,7 @@ const server = http.createServer((req, res) => {
 
   let pathname = new URL(req.url, `http://localhost:${PORT}`).pathname
   
-  // Serve schedule.json from root
-  if (pathname === '/schedule.json') {
-    const schedulePath = path.join(__dirname, 'schedule.json')
-    
-    fs.readFile(schedulePath, (err, data) => {
-      if (err) {
-        res.writeHead(404, { 'Content-Type': 'application/json' })
-        res.end(JSON.stringify({ error: 'Schedule file not found. Please add schedule.json to the project root.' }))
-      } else {
-        res.writeHead(200, { 'Content-Type': 'application/json' })
-        res.end(data)
-      }
-    })
-    return
-  }
+  // Serve static files
   
   // Serve built files from dist directory
   const distPath = path.join(__dirname, 'dist')
@@ -98,6 +84,6 @@ server.listen(PORT, () => {
   console.log(`🚀 Dance Course Planner server running on http://localhost:${PORT}`)
   console.log('📋 Make sure to:')
   console.log('   1. Run "npm run build" to build the app')
-  console.log('   2. Add your schedule.json file to the project root')
+  console.log('   2. Login with your Nimbuscloud credentials in the app')
   console.log('   3. Visit http://localhost:' + PORT + ' in your browser')
 })

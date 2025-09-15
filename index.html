@@ -15,8 +15,10 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     
-    <!-- Preload critical resources -->
-    <link rel="preload" href="/schedule.json" as="fetch" crossorigin="anonymous" />
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     
     <!-- Set language and title based on browser language -->
     <script>
@@ -24,7 +26,7 @@
       document.documentElement.lang = lang;
       if (lang === 'de') {
         document.title = 'Tanzkurs Planer';
-        document.querySelector('meta[name="description"]').content = 'Planen Sie Ihren perfekten Tanzstundenplan mit intelligenter Constraint-Lösung';
+        document.querySelector('meta[name="description"]').content = 'Plane deinen perfekten Tanzstundenplan mit intelligenter Constraint-Lösung';
         document.querySelector('meta[name="apple-mobile-web-app-title"]').content = 'Tanzplaner';
       }
     </script>
