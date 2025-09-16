@@ -97,6 +97,12 @@ const translations = {
     'Week of': 'Week of',
     
     // Loading messages
+    'Starting Dance Course Planner...': 'Starting Dance Course Planner...',
+    'Loading application configuration...': 'Loading application configuration...',
+    'Attempting to log in with saved credentials...': 'Attempting to log in with saved credentials...',
+    'Discovering available course weeks...': 'Discovering available course weeks...',
+    'Loading your course schedule...': 'Loading your course schedule...',
+    'Logging in to Nimbuscloud...': 'Logging in to Nimbuscloud...',
     'Initializing Dance Course Planner...': 'Initializing Dance Course Planner...',
     'Discovering available weeks...': 'Discovering available weeks...',
     'Loading schedule data...': 'Loading schedule data...',
@@ -367,6 +373,12 @@ const translations = {
     'Week of': 'Woche vom',
     
     // Loading messages
+    'Starting Dance Course Planner...': 'Tanzkursplaner wird gestartet...',
+    'Loading application configuration...': 'Anwendungskonfiguration wird geladen...',
+    'Attempting to log in with saved credentials...': 'Anmeldung mit gespeicherten Zugangsdaten wird versucht...',
+    'Discovering available course weeks...': 'Verfügbare Kurswochen werden erkundet...',
+    'Loading your course schedule...': 'Dein Kursprogramm wird geladen...',
+    'Logging in to Nimbuscloud...': 'Anmeldung bei Nimbuscloud...',
     'Initializing Dance Course Planner...': 'Tanzkursplaner wird initialisiert...',
     'Discovering available weeks...': 'Verfügbare Wochen werden erkundet...',
     'Loading schedule data...': 'Stundenplan wird geladen...',

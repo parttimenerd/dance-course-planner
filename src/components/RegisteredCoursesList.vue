@@ -28,8 +28,11 @@
           <div class="text-xs text-gray-500">
             {{ registration.date }} · {{ registration.time }}
           </div>
-          <div class="text-xs text-gray-500">
-            <span v-if="registration.teacher && registration.teacher !== 'Unknown teacher'">{{ registration.teacher }}</span><span v-if="registration.room && registration.room !== 'Unknown room' && registration.teacher && registration.teacher !== 'Unknown teacher'"> · </span><span v-if="registration.room && registration.room !== 'Unknown room'">{{ registration.room }}</span>
+          <div v-if="registration.teacher && registration.teacher !== 'Unknown teacher'" class="text-xs text-gray-500">
+            {{ registration.teacher }}
+          </div>
+          <div v-if="registration.room && registration.room !== 'Unknown room'" class="text-xs text-gray-500">
+            {{ registration.room }}
           </div>
         </div>
 
