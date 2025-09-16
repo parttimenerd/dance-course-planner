@@ -9,7 +9,7 @@
           </h1>
           <div class="flex items-center space-x-4">
             <WeekSelector
-              v-if="nimbusIsLoggedIn"
+              v-if="nimbusIsLoggedIn && nimbusAvailableWeeks.length > 0"
               :selected-week="nimbusSelectedWeek"
               :available-weeks="nimbusAvailableWeeks"
               @week-changed="handleWeekChange"
@@ -116,7 +116,7 @@
       <div v-else-if="!isAppLoading && nimbusIsLoggedIn" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <!-- Constraints Panel -->
         <div class="lg:col-span-1 space-y-6">
-          <!-- Nimbuscloud Login -->
+          <!-- Logged-in user panel and registered courses -->
           <NimbusLogin
             :is-logged-in="nimbusIsLoggedIn"
             :credentials="nimbusCredentials"
@@ -158,6 +158,23 @@
           />
         </div>
       </div>
+
+      <!-- Login Interface (show when not loading and not logged in) -->
+      <div v-else-if="!isAppLoading && !nimbusIsLoggedIn" class="max-w-md mx-auto">
+        <NimbusLogin
+          :is-logged-in="nimbusIsLoggedIn"
+          :credentials="nimbusCredentials"
+          :user-data="nimbusUserData"
+          :is-logging-in="nimbusLoggingIn"
+          :login-error="nimbusLoginError"
+          :registrations="nimbusRegistrations"
+          :schedule-data="scheduleData"
+          @login-attempt="handleNimbusLogin"
+          @logout="handleNimbusLogout"
+          @clear-error="nimbusClearLoginError"
+          @unregister="handleNimbusUnregister"
+        />
+      </div>
     </div>
     <AppFooter />
     
@@ -167,7 +184,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch, onErrorCaptured } from 'vue'
 import { useUrlState } from './composables/useUrlState.js'
 import { useCookieState } from './composables/useCookieState.js'
 import { useI18n } from './composables/useI18n.js'
@@ -221,6 +238,7 @@ export default {
       logout: nimbusLogout,
       clearLoginError: nimbusClearLoginError,
       setSelectedWeek: nimbusSetSelectedWeek,
+      setSelectedWeekFromUrl: nimbusSetSelectedWeekFromUrl,
       unregisterFromCourse: nimbusUnregisterFromCourse
     } = useNimbuscloud()
 
@@ -230,6 +248,19 @@ export default {
     const generating = ref(false)
     const hasGeneratedSchedules = ref(false)
     const scheduleData = ref(null)
+
+    // Error handling
+    onErrorCaptured((err, instance, info) => {
+      console.error('[App] Error captured:', err)
+      console.error('[App] Component instance:', instance)
+      console.error('[App] Error info:', info)
+      
+      // Set a user-friendly error message
+      error.value = 'An error occurred while updating the page. Please refresh and try again.'
+      
+      // Return false to prevent the error from propagating
+      return false
+    })
     const scheduler = ref(null)
     const schedules = ref([])
     const displaySchedules = ref([]) // Schedules to display (only updated when generation complete)
@@ -237,35 +268,52 @@ export default {
     const highlightedSchedule = ref(null)
     const isChangingWeek = ref(false) // Flag to prevent interference during week changes
     
-    // App loading states
+    // App loading states - Start as true to show loading from the beginning
     const isAppInitialized = ref(false) // Track if app has completed initial setup
     const isDiscoveringWeeks = ref(false) // Track week discovery process
     
+    // Initialization phase tracking for detailed loading messages
+    const initPhase = ref('starting') // 'starting', 'loadingConfig', 'attemptingLogin', 'discoveringWeeks', 'loadingSchedule', 'complete'
+    
     // Computed loading state - show dancing woman until everything is ready
     const isAppLoading = computed(() => {
-      // Show loading if:
-      // 1. Not yet initialized (app startup)
-      // 2. Currently logging in
+      // Show loading during any of these conditions:
+      // 1. Not yet initialized (app startup) - This ensures loading from the very start
+      // 2. Currently logging in to Nimbuscloud
       // 3. Loading schedule data
-      // 4. Discovering weeks
-      // 5. Not logged in yet (during auto-login attempt)
-      return !isAppInitialized.value || 
-             nimbusLoggingIn.value || 
-             loading.value || 
-             nimbusIsDiscoveringWeeks.value ||
-             (!nimbusIsLoggedIn.value && !isAppInitialized.value)
+      // 4. Discovering available weeks
+      const shouldShowLoading = !isAppInitialized.value || 
+                                nimbusLoggingIn.value || 
+                                loading.value || 
+                                nimbusIsDiscoveringWeeks.value
+      
+      return shouldShowLoading
     })
     
-    // Loading message based on current state
+    // Loading message based on current state - prioritize initialization
     const currentLoadingMessage = computed(() => {
-      if (nimbusLoggingIn.value) {
-        return t('Logging in...')
+      // Show detailed initialization messages during app startup
+      if (!isAppInitialized.value) {
+        switch (initPhase.value) {
+          case 'starting':
+            return t('Starting Dance Course Planner...')
+          case 'loadingConfig':
+            return t('Loading application configuration...')
+          case 'attemptingLogin':
+            return t('Attempting to log in with saved credentials...')
+          case 'discoveringWeeks':
+            return t('Discovering available course weeks...')
+          case 'loadingSchedule':
+            return t('Loading your course schedule...')
+          default:
+            return t('Initializing Dance Course Planner...')
+        }
+      } else if (nimbusLoggingIn.value) {
+        return t('Logging in to Nimbuscloud...')
       } else if (nimbusIsDiscoveringWeeks.value) {
         return t('Discovering available weeks...')
       } else if (loading.value) {
         return t('Loading schedule data...')
-      } else if (!nimbusIsLoggedIn.value) {
-        return t('Initializing Dance Course Planner...')
       }
       return t('Preparing your schedule...')
     })
@@ -386,6 +434,10 @@ export default {
               // Set highlighted schedule if present in URL
               if (urlConstraints.highlightSchedule !== undefined) {
                 highlightedSchedule.value = urlConstraints.highlightSchedule
+              }
+              // Set selected week if present in URL
+              if (urlConstraints.selectedWeek !== undefined) {
+                nimbusSetSelectedWeekFromUrl(urlConstraints.selectedWeek)
               }
             }
           } else {
@@ -579,7 +631,7 @@ export default {
         hasGeneratedSchedules.value = true
 
         // Save current state to URL
-        saveToUrl(constraints)
+        saveToUrl(constraints, null, nimbusSelectedWeek.value?.value)
 
       } catch (err) {
         console.error('Failed to generate schedules:', err)
@@ -707,8 +759,19 @@ export default {
       
       saveStateToCookies(constraints)
       // Also save to URL whenever constraints change
-      saveToUrl(constraints)
+      saveToUrl(constraints, null, nimbusSelectedWeek.value?.value)
     }, { deep: true })
+
+    // Watch for week selection changes to update URL
+    watch(() => nimbusSelectedWeek.value?.value, () => {
+      if (isChangingWeek.value) {
+        console.log('[App] Skipping week URL save during week change')
+        return
+      }
+      
+      // Save current constraints with new week to URL
+      saveToUrl(constraints, null, nimbusSelectedWeek.value?.value)
+    })
 
     // Watch for URL changes to handle back/forward navigation
     watch(() => new URLSearchParams(window.location.search).toString(), () => {
@@ -725,6 +788,10 @@ export default {
           highlightedSchedule.value = urlConstraints.highlightSchedule
         } else {
           highlightedSchedule.value = null
+        }
+        // Set selected week from URL
+        if (urlConstraints.selectedWeek !== undefined) {
+          nimbusSetSelectedWeekFromUrl(urlConstraints.selectedWeek)
         }
       }
     })
@@ -750,10 +817,9 @@ export default {
     const handleNimbusUnregister = async ({ courseId, dateId }) => {
       try {
         await nimbusUnregisterFromCourse(courseId, dateId)
-        // Optionally reload schedule data to reflect changes
-        if (nimbusIsLoggedIn.value) {
-          loadScheduleData(true)
-        }
+        // Registration state is already updated in useNimbuscloud composable
+        // No need to reload schedule data
+        console.log(`[App] Successfully unregistered from course ${courseId}`)
       } catch (error) {
         console.error('Failed to unregister from course:', error)
         // Could show a notification here
@@ -824,47 +890,77 @@ export default {
       }
     }
 
-    // Watch for login state changes to load schedule data
+    // Watch for login state changes to load schedule data (for subsequent logins)
     watch(() => nimbusIsLoggedIn.value, (newValue, oldValue) => {
-      if (newValue && !oldValue) {
-        // User just logged in, wait a bit for week discovery then load data
-        setTimeout(() => {
-          if (nimbusIsLoggedIn.value) {
-            loadScheduleData(true).then(() => {
-              // Mark app as initialized once login and data loading is complete
-              isAppInitialized.value = true
-            }).catch(() => {
-              // Even on error, mark as initialized to show the error state
-              isAppInitialized.value = true
-            })
-          }
-        }, 1500)
+      if (newValue && !oldValue && isAppInitialized.value) {
+        // User just logged in after app was already initialized, load data
+        loadScheduleData(true)
       } else if (!newValue && oldValue) {
-        // User logged out, reset initialization state
-        isAppInitialized.value = false
-      }
-    })
-    
-    // Also watch for the case where user is already logged in on startup
-    watch(() => ({
-      loggedIn: nimbusIsLoggedIn.value,
-      discoveringComplete: !nimbusIsDiscoveringWeeks.value
-    }), ({ loggedIn, discoveringComplete }) => {
-      if (loggedIn && discoveringComplete && !isAppInitialized.value) {
-        // User was already logged in and week discovery is complete, load data
-        loadScheduleData(true).then(() => {
-          isAppInitialized.value = true
-        }).catch(() => {
-          isAppInitialized.value = true
-        })
+        // User logged out, no need to change initialization state
+        // The UI will automatically show login screen based on nimbusIsLoggedIn
       }
     })
     
     // Initialize
     onMounted(async () => {
-      // Load configuration from JSON file
-      await loadConfiguration()
-      // Don't load immediately - let the watcher handle it after auto-login completes
+      try {
+        console.log('[App] Starting app initialization')
+        initPhase.value = 'loadingConfig'
+        
+        // Load configuration from JSON file
+        await loadConfiguration()
+        console.log('[App] Configuration loaded successfully')
+        
+        // Add a small delay to ensure the loading screen is visible
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        initPhase.value = 'attemptingLogin'
+        console.log('[App] Attempting auto-login')
+        
+        // Wait for the initial auto-login and week discovery to complete
+        // This ensures we don't show the login screen prematurely
+        let maxWaitTime = 5000 // Maximum 5 seconds
+        let waitTime = 0
+        const checkInterval = 100
+        
+        while (waitTime < maxWaitTime) {
+          // Check if auto-login process is complete
+          // We consider it complete if:
+          // 1. User is logged in and week discovery is not running, OR
+          // 2. User is not logged in (auto-login failed or no stored credentials)
+          if ((nimbusIsLoggedIn.value && !nimbusIsDiscoveringWeeks.value) || 
+              (!nimbusIsLoggedIn.value && waitTime > 2000)) {
+            break
+          }
+          
+          // Update phase based on what's happening
+          if (nimbusIsLoggedIn.value && nimbusIsDiscoveringWeeks.value) {
+            initPhase.value = 'discoveringWeeks'
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, checkInterval))
+          waitTime += checkInterval
+        }
+        
+        // If user is logged in after auto-login, load schedule data
+        if (nimbusIsLoggedIn.value) {
+          initPhase.value = 'loadingSchedule'
+          console.log('[App] Loading initial schedule data')
+          await loadScheduleData(true)
+          console.log('[App] Initial schedule data loaded')
+        }
+        
+        initPhase.value = 'complete'
+        console.log('[App] App initialization complete')
+        
+        // Mark app as initialized - this will show the appropriate UI
+        isAppInitialized.value = true
+      } catch (error) {
+        console.error('App initialization error:', error)
+        initPhase.value = 'complete'
+        // Even on error, mark as initialized to show the error state
+        isAppInitialized.value = true
+      }
     })
 
     return {
@@ -891,6 +987,7 @@ export default {
       // App loading state
       isAppLoading,
       currentLoadingMessage,
+      initPhase,
       // Nimbuscloud state
       nimbusIsLoggedIn,
       nimbusCredentials,

@@ -1,7 +1,7 @@
 <template>
   <div 
     class="bg-white rounded-lg shadow-sm border overflow-hidden cursor-pointer"
-    :class="{ 'ring-2 ring-green-500 bg-green-50 border-green-300': highlighted }"
+    :class="{ 'ring-2 ring-green-500 bg-green-50': highlighted }"
     @click="handleScheduleClick"
   >
     <div class="bg-gray-50 px-4 py-3 border-b">
@@ -148,12 +148,6 @@
             class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
           >
             📅 {{ t('Export to Calendar') }}
-          </button>
-          <button
-            @click="printSchedule"
-            class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
-          >
-            🖨️ {{ t('Print') }}
           </button>
 
           <!-- Registration Options (only if logged into Nimbuscloud) -->
@@ -604,91 +598,6 @@ export default {
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z'
     }
 
-    const printSchedule = () => {
-      // Create a print-friendly version
-      const printWindow = window.open('', '_blank')
-      const printContent = generatePrintHTML()
-      
-      printWindow.document.write(printContent)
-      printWindow.document.close()
-      printWindow.print()
-    }
-
-    const generatePrintHTML = () => {
-      // Generate weekly overview table
-      const weeklyOverviewHTML = `
-        <h2>Weekly Overview</h2>
-        <table style="width: 100%; border-collapse: collapse; margin: 20px 0;">
-          <thead>
-            <tr>
-              <th style="border: 1px solid #ddd; padding: 8px; background: #f5f5f5;">Time</th>
-              ${weekDays.value.map(day => `
-                <th style="border: 1px solid #ddd; padding: 8px; background: #f5f5f5;">${day}</th>
-              `).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${allTimeSlots.value.map(timeSlot => `
-              <tr>
-                <td style="border: 1px solid #ddd; padding: 8px; font-family: monospace; background: #fafafa;">
-                  ${formatTime(timeSlot)}
-                </td>
-                ${weekDays.value.map(day => {
-                  const course = getCourseForDayAndTime(day, timeSlot)
-                  return `
-                    <td style="border: 1px solid #ddd; padding: 4px; text-align: center; ${!course ? 'background: #f9f9f9; opacity: 0.5;' : ''}">
-                      ${course ? `<strong>${course.name}</strong>` : ''}
-                    </td>
-                  `
-                }).join('')}
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `
-
-      return `
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <title>Dance Schedule ${props.index + 1}</title>
-          <style>
-            body { font-family: Arial, sans-serif; margin: 20px; }
-            h1, h2 { color: #333; }
-            h2 { margin-top: 30px; margin-bottom: 15px; }
-            .course { margin: 10px 0; padding: 10px; border-left: 4px solid #4F46E5; }
-            .time { font-weight: bold; }
-            .details { color: #666; font-size: 0.9em; }
-            table { page-break-inside: auto; }
-            tr { page-break-inside: avoid; page-break-after: auto; }
-            @media print {
-              body { margin: 10px; }
-              h1 { font-size: 18px; }
-              h2 { font-size: 16px; }
-              table { font-size: 12px; }
-            }
-          </style>
-        </head>
-        <body>
-          <h1>Dance Schedule ${props.index + 1}</h1>
-          <p>Total: ${props.schedule.courses.length} courses • ${totalHours.value} hours • ${daysWithCourses.value.length} days</p>
-          
-          ${weeklyOverviewHTML}
-          
-          <h2>Course Details</h2>
-          ${props.schedule.courses.map(course => `
-            <div class="course">
-              <div class="time">${translateDayCode(course.day)} ${formatTime(course.startTime)} - ${formatTime(course.endTime)}</div>
-              <div><strong>${course.name}</strong> ${course.level ? '(' + course.level + ')' : ''}</div>
-              <div class="details">${course.type} • ${course.location} ${course.room ? '- ' + course.room : ''}</div>
-              ${course.teacher ? `<div class="details">Teacher: ${course.teacher}</div>` : ''}
-            </div>
-          `).join('')}
-        </body>
-        </html>
-      `
-    }
-
     // Registration handlers
     const handleRegister = async ({ courseId, dateId }) => {
       try {
@@ -827,7 +736,6 @@ export default {
       registerToAllCourses,
       unregisterFromAllCourses,
       exportToCalendar,
-      printSchedule,
       // Expose for template conditions
       hasValidCustomerId
     }

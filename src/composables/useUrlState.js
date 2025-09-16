@@ -77,10 +77,18 @@ export function useUrlState() {
       config.highlightSchedule = parseInt(params.get('highlightSchedule'))
     }
 
+    // Parse selected week
+    if (params.has('week')) {
+      const weekValue = parseInt(params.get('week'))
+      if (!isNaN(weekValue) && weekValue >= 0) {
+        config.selectedWeek = weekValue
+      }
+    }
+
     return config
   }
 
-  const saveToUrl = (config, schedule = null) => {
+  const saveToUrl = (config, schedule = null, selectedWeek = null) => {
     const params = new URLSearchParams()
 
     // Save configuration
@@ -108,24 +116,24 @@ export function useUrlState() {
       params.set('blocked', config.blockedDays.join(','))
     }
 
-    if (config.maxCoursesPerDay && config.maxCoursesPerDay !== 3) {
+    if (config.maxCoursesPerDay !== 3) {
       params.set('maxPerDay', config.maxCoursesPerDay.toString())
     }
 
-    if (config.maxTimeBetweenCourses && config.maxTimeBetweenCourses !== 4) {
+    if (config.maxTimeBetweenCourses > 0) {
       params.set('maxGap', config.maxTimeBetweenCourses.toString())
     }
 
-    if (config.noDuplicateCoursesPerDay) {
-      params.set('noDupe', 'true')
+    if (config.noDuplicateCoursesPerDay !== true) {
+      params.set('noDupe', config.noDuplicateCoursesPerDay.toString())
     }
 
-    if (config.preventOverlaps) {
-      params.set('noOverlap', 'true')
+    if (config.preventOverlaps !== true) {
+      params.set('noOverlap', config.preventOverlaps.toString())
     }
 
     if (config.disablePairCourses) {
-      params.set('noPair', 'true')
+      params.set('noPair', config.disablePairCourses.toString())
     }
 
     // Save per-day time slots
@@ -136,6 +144,11 @@ export function useUrlState() {
     // Save selected time slots
     if (config.selectedTimeSlots && config.selectedTimeSlots.length > 0) {
       params.set('selectedSlots', config.selectedTimeSlots.join(','))
+    }
+
+    // Save selected week if provided and not default (current week = 0)
+    if (selectedWeek !== null && selectedWeek !== undefined && selectedWeek !== 0) {
+      params.set('week', selectedWeek.toString())
     }
 
     // Save specific schedule if provided

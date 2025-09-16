@@ -5,7 +5,8 @@
     </label>
     <select
       id="week-select"
-      :value="selectedWeek?.value || 1"
+      :key="`week-selector-${availableWeeks.length}-${selectedWeek?.value}`"
+      :value="selectValue"
       @change="handleWeekChange"
       class="text-sm border border-gray-300 rounded-md px-3 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     >
@@ -21,7 +22,7 @@
 </template>
 
 <script>
-import { watch } from 'vue'
+import { watch, computed } from 'vue'
 import { useI18n } from '../composables/useI18n.js'
 
 export default {
@@ -40,6 +41,13 @@ export default {
   setup(props, { emit }) {
     const { t, formatDate } = useI18n()
     
+    // Computed property for the select value to ensure proper reactivity
+    const selectValue = computed(() => {
+      const value = props.selectedWeek?.value
+      console.log('[WeekSelector] Computed select value:', value, 'from selectedWeek:', props.selectedWeek)
+      return value
+    })
+    
     // Debug props changes
     watch(() => props.selectedWeek, (newWeek, oldWeek) => {
       console.log('[WeekSelector] selectedWeek prop changed from:', oldWeek, 'to:', newWeek)
@@ -51,7 +59,17 @@ export default {
     
     const handleWeekChange = (event) => {
       const weekValue = parseInt(event.target.value)
-      console.log('[WeekSelector] Week changed to:', weekValue)
+      console.log('[WeekSelector] Week change event fired. Value:', weekValue)
+      console.log('[WeekSelector] Current selectedWeek:', props.selectedWeek)
+      console.log('[WeekSelector] Available weeks:', props.availableWeeks.map(w => ({ value: w.value, label: w.label })))
+      
+      // Check if this is actually a change
+      if (props.selectedWeek && props.selectedWeek.value === weekValue) {
+        console.log('[WeekSelector] No actual change detected, ignoring')
+        return
+      }
+      
+      console.log('[WeekSelector] Emitting week-changed with value:', weekValue)
       emit('week-changed', weekValue)
     }
     
@@ -68,6 +86,7 @@ export default {
     
     return {
       t,
+      selectValue,
       handleWeekChange,
       getWeekLabel
     }

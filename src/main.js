@@ -2,8 +2,16 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import './style.css'
 
-const app = createApp(App)
-app.mount('#app')
+console.log('main.js: Starting application...')
+
+try {
+  const app = createApp(App)
+  console.log('main.js: App created, mounting...')
+  app.mount('#app')
+  console.log('main.js: App mounted successfully')
+} catch (error) {
+  console.error('main.js: Failed to create or mount app:', error)
+}
 
 // Only register service worker in production to avoid development conflicts
 if ('serviceWorker' in navigator && import.meta.env.PROD) {

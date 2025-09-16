@@ -15,7 +15,7 @@ export function useNimbuscloud() {
   
   // Initialize available weeks (will be updated dynamically)
   availableWeeks.value = nimbuscloudClient.getAvailableWeeks()
-  selectedWeek.value = availableWeeks.value[1] // Default to next week
+  selectedWeek.value = availableWeeks.value[0] // Default to current week
   
   // Auto-login on mount if credentials exist
   onMounted(async () => {
@@ -106,9 +106,9 @@ export function useNimbuscloud() {
             }
           }
         } else {
-          // No previous selection, default to next week (index 1) if available, otherwise first week
-          selectedWeek.value = dynamicWeeks.find(w => w.value === 1) || dynamicWeeks[0]
-          console.log(`[useNimbuscloud] Selected default week:`, selectedWeek.value)
+          // No previous selection, default to current week (index 0) if available, otherwise first available week
+          selectedWeek.value = dynamicWeeks.find(w => w.value === 0) || dynamicWeeks[0]
+          console.log(`[useNimbuscloud] Selected default week (current):`, selectedWeek.value)
         }
       }
     } catch (error) {
@@ -145,6 +145,14 @@ export function useNimbuscloud() {
           // Force reactivity update
           userData.value = { ...userData.value }
           console.log('[useNimbuscloud] Forced reactivity update, final userData.value:', userData.value)
+        }
+        
+        // Fetch and integrate precheckins data after successful auto-login
+        try {
+          await fetchAndIntegratePreCheckins()
+        } catch (error) {
+          console.warn('[useNimbuscloud] Failed to load precheckins during auto-login:', error)
+          // Don't fail auto-login if we can't load precheckins
         }
         
         console.log('[useNimbuscloud] Auto-login successful')
@@ -317,6 +325,13 @@ export function useNimbuscloud() {
         })
       }
       
+      // Fetch and integrate precheckins data (non-blocking)
+      try {
+        await fetchAndIntegratePreCheckins()
+      } catch (precheckinError) {
+        console.warn('[useNimbuscloud] Failed to fetch precheckins (non-critical):', precheckinError.message)
+      }
+      
       return enrichedData
       
     } catch (error) {
@@ -343,6 +358,61 @@ export function useNimbuscloud() {
     
     // Force reactivity update after all registrations are updated
     forceRegistrationsUpdate()
+  }
+
+  // Function to fetch and integrate precheckins data
+  const fetchAndIntegratePreCheckins = async () => {
+    if (!isLoggedIn.value) {
+      console.log('[useNimbuscloud] Not logged in, skipping precheckins fetch')
+      return
+    }
+
+    try {
+      console.log('[useNimbuscloud] Fetching precheckins data...')
+      const preCheckinsData = await nimbuscloudClient.getMyPreCheckins()
+      
+      if (preCheckinsData?.processedEvents && Array.isArray(preCheckinsData.processedEvents)) {
+        console.log(`[useNimbuscloud] Processing ${preCheckinsData.processedEvents.length} precheckin events`)
+        
+        preCheckinsData.processedEvents.forEach(event => {
+          // Only process confirmed precheckins
+          if (event.preCheckinConfirmed) {
+            const registrationKey = event.eventId
+            
+            // Add or update the registration in our map
+            registrations.value.set(registrationKey, {
+              registered: true,
+              timestamp: new Date(),
+              source: 'precheckin',
+              isToday: event.isToday,
+              startsSoon: event.startsSoon,
+              eventData: {
+                id: event.eventId,
+                name: event.name,
+                location: event.location,
+                room: event.room,
+                startTime: event.startTime,
+                endTime: event.endTime,
+                customerId: event.customerId,
+                customerName: event.customerName
+              }
+            })
+            
+            console.log(`[useNimbuscloud] Added precheckin registration: ${event.name} (${event.eventId})`)
+          }
+        })
+        
+        // Force reactivity update
+        forceRegistrationsUpdate()
+        
+        console.log(`[useNimbuscloud] Integrated ${preCheckinsData.processedEvents.filter(e => e.preCheckinConfirmed).length} confirmed precheckins`)
+      } else {
+        console.log('[useNimbuscloud] No processed events found in precheckins data')
+      }
+    } catch (error) {
+      console.error('[useNimbuscloud] Failed to fetch precheckins:', error)
+      // Don't throw - this is supplementary data, not critical
+    }
   }
 
   const login = async (loginCredentials) => {
@@ -388,6 +458,14 @@ export function useNimbuscloud() {
       } catch (error) {
         console.warn('[useNimbuscloud] Failed to load initial registration status:', error)
         // Don't fail login if we can't load registration status
+      }
+      
+      // Fetch and integrate precheckins data
+      try {
+        await fetchAndIntegratePreCheckins()
+      } catch (error) {
+        console.warn('[useNimbuscloud] Failed to load precheckins data:', error)
+        // Don't fail login if we can't load precheckins
       }
       
       // Discover available weeks after successful login
@@ -683,6 +761,20 @@ export function useNimbuscloud() {
     return metadata?.pairOnly || false
   }
 
+  // Function to set selected week from URL parameters
+  const setSelectedWeekFromUrl = (weekValue) => {
+    if (weekValue !== null && weekValue !== undefined) {
+      // Find the matching week in available weeks
+      const matchingWeek = availableWeeks.value.find(w => w.value === weekValue)
+      if (matchingWeek) {
+        selectedWeek.value = matchingWeek
+        console.log(`[useNimbuscloud] Set selected week from URL:`, selectedWeek.value)
+      } else {
+        console.warn(`[useNimbuscloud] Week ${weekValue} from URL not found in available weeks`)
+      }
+    }
+  }
+
   return {
     isLoggedIn,
     credentials,
@@ -699,6 +791,7 @@ export function useNimbuscloud() {
     setSelectedWeek,
     attemptAutoLogin,
     discoverAvailableWeeks,
+    setSelectedWeekFromUrl,
     // Registration functionality
     registrations,
     registrationInProgress,
@@ -709,6 +802,7 @@ export function useNimbuscloud() {
     isRegisteredForCourse,
     isRegistrationInProgress,
     isPairOnlyCourse,
-    hasValidCustomerId
+    hasValidCustomerId,
+    fetchAndIntegratePreCheckins
   }
 }
