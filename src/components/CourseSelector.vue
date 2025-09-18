@@ -10,7 +10,7 @@
         type="text"
         v-model="searchQuery"
         :placeholder="t('Search courses...')"
-        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500"
+        class="w-full px-3 py-3 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 touch-manipulation"
       />
       <!-- Show pair course filter status -->
       <div v-if="constraints.disablePairCourses" class="mt-2 text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
@@ -19,19 +19,19 @@
     </div>
 
     <!-- Course List -->
-    <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg">
+    <div class="max-h-64 sm:max-h-80 overflow-y-auto border border-gray-200 rounded-lg">
       <div v-if="filteredCourseGroups.length === 0" class="text-sm text-gray-500 text-center py-8">
         {{ t('No courses found') }}{{ searchQuery ? ' ' + t('matching') + ' "' + searchQuery + '"' : '' }}
       </div>
       
       <div v-for="[courseName, instances] in filteredCourseGroups" :key="courseName" class="border-b border-gray-100 last:border-b-0">
-        <div class="p-3">
+        <div class="p-3 sm:p-4">
           <div class="flex items-center justify-between">
             <div class="flex items-center">
               <button
                 @click="toggleCourseName(courseName)"
                 :class="[
-                  'px-3 py-2 text-sm rounded-lg border transition-colors mr-3',
+                  'px-3 py-2 sm:px-4 sm:py-3 text-sm rounded-lg border transition-colors mr-3 min-h-[44px] touch-manipulation',
                   isCourseNameSelected(courseName)
                     ? 'bg-green-100 text-green-800 border-green-300'
                     : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100'
@@ -43,7 +43,7 @@
           </div>
           
                     <!-- Show available time slots for reference -->
-          <div class="mt-2 flex flex-wrap gap-1">
+          <div class="mt-3 flex flex-wrap gap-1 sm:gap-2">
             <span
               v-for="course in getVisibleTimeSlots(instances)"
               :key="course.id"
@@ -74,16 +74,16 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="mt-3 flex gap-2">
+    <div class="mt-3 flex gap-2 sm:gap-3">
       <button
         @click="selectAll"
-        class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+        class="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors touch-manipulation min-h-[44px] flex items-center"
       >
         {{ t('Select All') }}
       </button>
       <button
         @click="clearAll"
-        class="px-3 py-1 text-xs bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+        class="px-3 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors touch-manipulation min-h-[44px] flex items-center"
       >
         {{ t('Clear All') }}
       </button>

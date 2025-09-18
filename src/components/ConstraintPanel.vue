@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
+  <div class="bg-white rounded-lg shadow-sm border p-4 sm:p-6 lg:sticky lg:top-8" data-preferences>
     <div class="flex items-center justify-between mb-4">
       <h2 class="text-lg font-semibold text-gray-900 flex items-center">
         <svg class="w-5 h-5 mr-2 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -9,6 +9,16 @@
         {{ t('Preferences') }}
       </h2>
       <div class="flex items-center space-x-2">
+        <!-- Mobile: Jump to solutions button -->
+        <button
+          @click="scrollToSolutions"
+          class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors touch-manipulation"
+          :title="t('Jump to solutions')"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+          </svg>
+        </button>
         <ShareButton 
           :config="constraints" 
           type="config" 
@@ -287,6 +297,17 @@ export default {
       }
     }
 
+    const scrollToSolutions = () => {
+      // Find the solutions section and scroll to it
+      const solutionsSection = document.querySelector('.schedule-results, [data-solutions]')
+      if (solutionsSection) {
+        solutionsSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }
+
     return {
       t,
       availableCourses,
@@ -298,7 +319,8 @@ export default {
       handleDisablePairCoursesChanged,
       getCourseMultiplicity,
       increaseMultiplicity,
-      decreaseMultiplicity
+      decreaseMultiplicity,
+      scrollToSolutions
     }
   }
 }

@@ -9,23 +9,23 @@
     <!-- Results -->
     <div v-else>
       <!-- Saved Schedules Section -->
-      <div v-if="hasSavedSolutions" class="mb-8">
+      <div v-if="hasSavedSolutions" class="mb-6 sm:mb-8">
         <div class="flex items-center justify-between mb-4">
           <div 
-            class="flex items-center space-x-3 cursor-pointer hover:opacity-75 transition-opacity"
+            class="flex items-center space-x-2 sm:space-x-3 cursor-pointer hover:opacity-75 transition-opacity touch-manipulation"
             @click="toggleSavedSectionVisibility"
           >
-            <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+            <h2 class="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
               ⭐ {{ getSavedSchedulesHeaderText }}
             </h2>
             <div
               :class="[
-                'flex items-center justify-center w-8 h-8 rounded-full transition-colors',
-                'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                'flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full transition-colors',
+                'bg-gray-100 text-gray-600 hover:bg-gray-200 touch-manipulation'
               ]"
               :title="isSavedSectionVisible ? t('Hide saved schedules') : t('Show saved schedules')"
             >
-              <svg class="w-4 h-4 transition-transform" :class="{ 'rotate-180': isSavedSectionVisible }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <svg class="w-4 h-4 sm:w-5 sm:h-5 transition-transform" :class="{ 'rotate-180': isSavedSectionVisible }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </div>
@@ -33,7 +33,7 @@
           <div class="flex items-center space-x-2">
             <button
               @click="clearAllSavedSolutions"
-              class="text-xs text-red-600 hover:text-red-700 underline"
+              class="text-xs sm:text-sm text-red-600 hover:text-red-700 underline px-2 py-1 touch-manipulation"
               :title="t('Clear all saved')"
             >
               {{ t('Clear all') }}
@@ -42,7 +42,7 @@
         </div>
         
         <!-- Saved Schedules List -->
-        <div v-if="isSavedSectionVisible" class="space-y-4 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        <div v-if="isSavedSectionVisible" class="space-y-4 mb-6 bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4">
           <ScheduleSolution
             v-for="(schedule, index) in savedSchedules"
             :key="`saved-${schedule.id}-${index}`"
@@ -61,19 +61,28 @@
       </div>
 
       <!-- Results Header -->
-      <div class="flex items-center justify-between mb-6">
-        <div class="relative">
+      <div class="flex items-center justify-between mb-6" data-solutions>
+        <div class="relative flex items-center space-x-3">
+          <!-- Mobile: Jump to preferences button -->
+          <button
+            @click="scrollToPreferences"
+            class="lg:hidden inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors touch-manipulation"
+            :title="t('Jump to preferences')"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18" />
+            </svg>
+          </button>
           <h2 class="text-xl font-semibold text-gray-900">
             📋 {{ t('Generated Schedules') }}
           </h2>
           <!-- Dancing Loading Indicator -->
-          <div v-if="generating" class="absolute -right-10 top-0 flex items-center">
+          <div v-if="generating" class="flex items-center">
             <div class="text-2xl">💃🕺</div>
           </div>
         </div>
         <div class="text-sm text-gray-600">
           <span v-if="generating" class="animate-pulse">{{ t('Computing schedules...') }}</span>
-          <span v-else>{{ getScheduleCountText(schedules.length) }}</span>
         </div>
       </div>
 
@@ -246,6 +255,17 @@ export default {
       }
     })
 
+    const scrollToPreferences = () => {
+      // Find the preferences/constraints section and scroll to it
+      const preferencesSection = document.querySelector('.constraint-panel, [data-preferences]')
+      if (preferencesSection) {
+        preferencesSection.scrollIntoView({ 
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    }
+
     return {
       t,
       getScheduleCountText,
@@ -255,7 +275,8 @@ export default {
       hasSavedSolutions,
       isSavedSectionVisible,
       toggleSavedSectionVisibility,
-      clearAllSavedSolutions
+      clearAllSavedSolutions,
+      scrollToPreferences
     }
   },
   methods: {

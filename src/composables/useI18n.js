@@ -224,6 +224,10 @@ const translations = {
     'View source code, contribute, or report issues': 'GitHub',
     'Data stored locally in browser only': 'Data stored locally in browser only',
     
+    // Navigation buttons
+    'Jump to solutions': 'Jump to solutions',
+    'Jump to preferences': 'Jump to preferences',
+    
     // About Modal and Risk Disclaimer
     'About': 'About',
     'aboutTitle': 'About Dance Course Planner',
@@ -499,7 +503,11 @@ const translations = {
     'Open Source': 'Open Source',
     'Licensed': 'Lizenziert',
     'View source code, contribute, or report issues': 'Quellcode ansehen, beitragen oder Probleme melden',
-    'Data stored locally in browser only': 'Daten werden nur lokal im Browser gespeichert'
+    'Data stored locally in browser only': 'Daten werden nur lokal im Browser gespeichert',
+    
+    // Navigation buttons
+    'Jump to solutions': 'Zu Lösungen springen',
+    'Jump to preferences': 'Zu Einstellungen springen'
   }
 }
 

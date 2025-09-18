@@ -1,7 +1,7 @@
 <template>
-  <div class="bg-white rounded-lg shadow-sm border p-6">
+  <div class="bg-white rounded-lg shadow-sm border p-4 sm:p-6">
     <div v-if="!isLoggedIn" class="text-center">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">
+      <h3 class="text-base sm:text-lg font-medium text-gray-900 mb-4">
         {{ t('Connect to') }} <a href="https://community.nimbuscloud.at/" target="_blank" rel="noopener noreferrer" 
            class="text-blue-600 hover:text-blue-800 underline">{{ t('Nimbuscloud') }}</a>
       </h3>
@@ -29,7 +29,7 @@
             required
             :disabled="isLoggingIn"
             @input="$emit('clear-error')"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            class="w-full px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 touch-manipulation"
             :placeholder="t('Enter your username')"
           />
         </div>
@@ -47,7 +47,7 @@
             required
             :disabled="isLoggingIn"
             @input="$emit('clear-error')"
-            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50"
+            class="w-full px-3 py-3 sm:py-2 text-base sm:text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 touch-manipulation"
             :placeholder="t('Enter your password')"
           />
         </div>

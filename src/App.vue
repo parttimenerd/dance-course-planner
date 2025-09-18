@@ -3,103 +3,75 @@
     <!-- Header -->
     <header class="bg-white shadow-sm border-b">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between items-center h-16">
-          <h1 class="text-2xl font-bold text-gray-900">
+        <div class="flex justify-between items-center h-14 sm:h-16">
+          <h1 class="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate mr-2">
             {{ t('Dance Course Planner') }}
           </h1>
-          <div class="flex items-center space-x-4">
+          <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
             <WeekSelector
               v-if="nimbusIsLoggedIn && nimbusAvailableWeeks.length > 0"
               :selected-week="nimbusSelectedWeek"
               :available-weeks="nimbusAvailableWeeks"
               @week-changed="handleWeekChange"
+              class="hidden sm:block"
             />
             <LanguageSwitcher />
+            <!-- Mobile refresh button -->
+            <button
+              v-if="nimbusIsLoggedIn && !isAppLoading"
+              @click="handleRefresh"
+              class="sm:hidden inline-flex items-center px-2 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 border border-transparent rounded-md transition-all duration-200 ease-in-out touch-manipulation"
+              :title="t('Refresh data')"
+              :disabled="loading"
+            >
+              <svg class="w-4 h-4" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+            </button>
             <button
               @click="showAboutModal = true"
-              class="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm transition-all duration-200 ease-in-out hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              class="inline-flex items-center px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 border border-transparent rounded-md shadow-sm transition-all duration-200 ease-in-out hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 touch-manipulation"
               :title="t('About')"
             >
-              {{ t('About') }}
+              <span class="hidden sm:inline">{{ t('About') }}</span>
+              <span class="sm:hidden">ℹ️</span>
             </button>
           </div>
+        </div>
+        
+        <!-- Mobile Week Selector - shown below header on mobile -->
+        <div v-if="nimbusIsLoggedIn && nimbusAvailableWeeks.length > 0" class="pb-3 sm:hidden">
+          <WeekSelector
+            :selected-week="nimbusSelectedWeek"
+            :available-weeks="nimbusAvailableWeeks"
+            @week-changed="handleWeekChange"
+          />
         </div>
       </div>
     </header>
 
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <!-- Dancing Woman - Prima<style>
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
-}
-
-/* Enhanced loading animations */
-@keyframes dance {
-  0%, 50%, 100% {
-    transform: translateY(0) rotate(0deg);
-  }
-  25% {
-    transform: translateY(-10px) rotate(5deg);
-  }
-  75% {
-    transform: translateY(-5px) rotate(-5deg);
-  }
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateY(-8px);
-    opacity: 1;
-  }
-}
-
-/* Floating animation for music notes */
-.animate-pulse {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Gradient background for loading state */
-.loading-background {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-</style>hown during initial load, login, and schedule loading) -->
-      <div v-if="isAppLoading" class="text-center py-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <!-- Dancing Woman - Shown during initial load, login, and schedule loading) -->
+      <div v-if="isAppLoading" class="text-center py-8 sm:py-12">
         <div class="relative">
           <!-- Main Dancing Woman with rotation -->
-          <div class="text-6xl mb-4 inline-block transform hover:scale-110 transition-transform duration-300">
+          <div class="text-4xl sm:text-6xl mb-4 inline-block transform hover:scale-110 transition-transform duration-300">
             💃
           </div>
           
           <!-- Music notes floating around -->
-          <div class="absolute -top-2 -left-8 text-2xl animate-pulse opacity-70" style="animation-delay: 0s;">🎵</div>
-          <div class="absolute -top-4 right-4 text-xl animate-pulse opacity-60" style="animation-delay: 0.8s;">🎶</div>
-          <div class="absolute top-8 -right-6 text-lg animate-pulse opacity-50" style="animation-delay: 1.2s;">♪</div>
+          <div class="absolute -top-1 sm:-top-2 -left-6 sm:-left-8 text-lg sm:text-2xl animate-pulse opacity-70" style="animation-delay: 0s;">🎵</div>
+          <div class="absolute -top-2 sm:-top-4 right-2 sm:right-4 text-base sm:text-xl animate-pulse opacity-60" style="animation-delay: 0.8s;">🎶</div>
+          <div class="absolute top-6 sm:top-8 -right-4 sm:-right-6 text-sm sm:text-lg animate-pulse opacity-50" style="animation-delay: 1.2s;">♪</div>
         </div>
         
         <div class="space-y-3">
-          <p class="text-lg font-medium text-gray-800">
+          <p class="text-base sm:text-lg font-medium text-gray-800 px-4">
             {{ currentLoadingMessage }}
           </p>
         </div>
       </div>
+
 
       <!-- Error State (only for actual errors, not login prompts) -->
       <div v-else-if="error && nimbusIsLoggedIn && !isAppLoading" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
@@ -113,9 +85,9 @@
       </div>
 
       <!-- Main Content (only show when fully loaded and logged in) -->
-      <div v-else-if="!isAppLoading && nimbusIsLoggedIn" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div v-else-if="!isAppLoading && nimbusIsLoggedIn" class="space-y-6 lg:space-y-0 lg:grid lg:grid-cols-3 lg:gap-8">
         <!-- Constraints Panel -->
-        <div class="lg:col-span-1 space-y-6">
+        <div class="lg:col-span-1 space-y-4 sm:space-y-6">
           <!-- Logged-in user panel and registered courses -->
           <NimbusLogin
             :is-logged-in="nimbusIsLoggedIn"
@@ -142,7 +114,7 @@
         </div>
 
         <!-- Results Panel -->
-        <div class="lg:col-span-2">
+        <div class="lg:col-span-2 min-w-0 schedule-results">
           <ScheduleResults
             :schedules="displaySchedules"
             :suggestions="suggestions"
@@ -901,6 +873,47 @@ export default {
       }
     })
     
+    // Add haptic feedback simulation for mobile interactions
+    const triggerHapticFeedback = (type = 'light') => {
+      // Check if the device supports haptic feedback
+      if (navigator.vibrate) {
+        switch (type) {
+          case 'light':
+            navigator.vibrate(10)
+            break
+          case 'medium':
+            navigator.vibrate(20)
+            break
+          case 'heavy':
+            navigator.vibrate([30, 10, 30])
+            break
+        }
+      }
+    }
+
+    // Add refresh method for mobile
+    const handleRefresh = async () => {
+      if (!nimbusIsLoggedIn.value || loading.value) return
+      
+      try {
+        console.log('[App] Manual refresh triggered')
+        triggerHapticFeedback('light') // Haptic feedback for refresh action
+        await loadScheduleData(true, true) // Skip URL loading to preserve current state
+        
+        // If we have selected courses, regenerate schedules
+        if (constraints.selectedCourseNames && constraints.selectedCourseNames.length > 0) {
+          setTimeout(() => {
+            generateSchedules()
+          }, 100)
+        }
+        
+        triggerHapticFeedback('medium') // Success feedback
+      } catch (error) {
+        console.error('[App] Failed to refresh:', error)
+        triggerHapticFeedback('heavy') // Error feedback
+      }
+    }
+
     // Initialize
     onMounted(async () => {
       try {
@@ -1009,7 +1022,9 @@ export default {
       handleNimbusLogout,
       nimbusClearLoginError,
       handleNimbusUnregister,
-      handleWeekChange
+      handleWeekChange,
+      handleRefresh,
+      triggerHapticFeedback
     }
   }
 }
@@ -1032,5 +1047,61 @@ export default {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Enhanced loading animations */
+@keyframes dance {
+  0%, 50%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  75% {
+    transform: translateY(-5px) rotate(-5deg);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-8px);
+    opacity: 1;
+  }
+}
+
+/* Floating animation for music notes */
+.animate-pulse {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Gradient background for loading state */
+.loading-background {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Touch-friendly styles for mobile */
+.touch-manipulation {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Improved scrollbar for mobile webkit browsers */
+@supports (-webkit-appearance: none) and (stroke-color: transparent) {
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+  }
 }
 </style>
